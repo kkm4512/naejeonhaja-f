@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolHome title="칼바람 나락" />
+    <LolAbyss title="칼바람 나락" />
 </template>
 
 <style lang="postcss" scoped>
