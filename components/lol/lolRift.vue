@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useLolStore } from '~/stores/lol/useLolStore';
-import type { ReqLine, ReqPlayer, ReqTier, ReqLineRole, ReqLines } from '~/types/req/reqLolDto';
-import type { ApiResponse } from '~/types/res/common';
+import type { ApiResponse, Line, LineRole, Lines, Tier } from '~/types/common';
+import type { RiftRequestPlayer } from '~/types/req/reqLolDto';
 import type { RiftResponseDto } from '~/types/res/resLolDto';
 
 const router = useRouter(); // Vue Router 사용
@@ -14,7 +14,7 @@ const sampleNicknames = [
   "Summoner6", "Summoner7", "Summoner8", "Summoner9", "Summoner10"
 ];
 
-const tiers: ReqTier[] = [
+const tiers: Tier[] = [
   "UNRANKED",
   "IRON_IV", "IRON_III", "IRON_II", "IRON_I",
   "BRONZE_IV", "BRONZE_III", "BRONZE_II", "BRONZE_I",
@@ -28,10 +28,10 @@ const tiers: ReqTier[] = [
   "CHALLENGER"
 ];
 
-const lines: ReqLine[] = ["TOP", "JUNGLE", "MID", "AD", "SUPPORT"];
+const lines: Line[] = ["TOP", "JUNGLE", "MID", "AD", "SUPPORT"];
 
 // 모든 플레이어 정보를 저장
-const players = ref<ReqPlayer[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
+const players = ref<RiftRequestPlayer[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
 
 // 랜덤 데이터 생성 함수
 const generateRandomData = () => {
@@ -48,11 +48,11 @@ const generateRandomData = () => {
 
   const randomTier = () => tiers[Math.floor(Math.random() * tiers.length)];
 
-  const randomlines = (): ReqLines[] => {
-    const selectedlines: ReqLines[] = [];
+  const randomlines = (): Lines[] => {
+    const selectedlines: Lines[] = [];
     const lineCount = Math.floor(Math.random() * lines.length) + 1;
     while (selectedlines.length < lineCount) {
-      const randomline = lines[Math.floor(Math.random() * lines.length)] as ReqLine;
+      const randomline = lines[Math.floor(Math.random() * lines.length)] as Line;
       if (!selectedlines.find((l) => l.line === randomline)) {
         const type = Math.random() > 0.5 ? "MAINLINE" : "SUBLINE";
         selectedlines.push({ line: randomline, lineRole: type });
@@ -69,7 +69,7 @@ const generateRandomData = () => {
 };
 
 // 역할 업데이트 함수
-const updatelines = (player: ReqPlayer, line: ReqLine, type: ReqLineRole): void => {
+const updatelines = (player: RiftRequestPlayer, line: Line, type: LineRole): void => {
   const existing = player.lines.find((l) => l.line === line);
 
   if (existing) {
@@ -87,21 +87,17 @@ const updatelines = (player: ReqPlayer, line: ReqLine, type: ReqLineRole): void 
 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
-  const riftResponseDto: ApiResponse<RiftResponseDto> = await lolFetch(players.value, "rift");
-  lolStore.setReqPlayers(players.value);
-  lolStore.setRiftResponseDto(riftResponseDto);
-  router.push("/game/lol/result")
+  const response = await lolFetch<RiftRequestPlayer,ApiResponse<RiftResponseDto>>(players.value, "rift");
+  lolStore.setRiftRequestPlayer(players.value);
+  lolStore.setRiftResponseDto(response);
+  router.push("/game/lol/riftResult")
 };
 
-// 부모 컴포넌트로부터 받는 제목
-const props = defineProps<{
-  title: string;
-}>();
 </script>
 
 <template>
   <div class="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ props.title }}</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-6"> 소환사의 협곡 </h1>
 
     <!-- 랜덤 데이터 생성 버튼 -->
     <button
@@ -226,7 +222,8 @@ const props = defineProps<{
       @click="sendToServer"
       class="mt-6 px-6 py-3 bg-orange-500 text-white text-lg font-medium rounded-md shadow hover:bg-orange-600 transition"
     >
-      데이터 전송
+      확인
     </button>
   </div>
+  <LolFooter />
 </template>

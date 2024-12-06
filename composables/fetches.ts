@@ -1,8 +1,7 @@
-import type { ReqPlayer } from "~/types/req/reqLolDto";
-import type { ApiResponse, BaseExceptionResponse } from "~/types/res/common";
-import type { RiftResponseDto } from "~/types/res/resLolDto";
+import type { ApiResponse } from "~/types/common";
 
-export const lolFetch = async (teams: ReqPlayer[], endPoint: string): Promise<ApiResponse<RiftResponseDto>> => {
+// 롤 데이터 보낼때 fetch 메서드
+export const lolFetch = async <T,R>(teams: T[],endPoint: string): Promise<R> => {
     const { public: { baseApi } } = useRuntimeConfig();
     const url = baseApi + "/game/lol/" + endPoint;
     const body = JSON.stringify(teams);
@@ -16,20 +15,55 @@ export const lolFetch = async (teams: ReqPlayer[], endPoint: string): Promise<Ap
             body,
         });
 
-        // Parse response body
-        const apiResponse: ApiResponse<RiftResponseDto> | BaseExceptionResponse = await response.json();
+        const result = await response.json();
 
-        // Check if the response status is not OK (error case)
+        // Handle non-OK status (failure case)
         if (!response.ok) {
-            alert(apiResponse.message)
-            throw apiResponse as BaseExceptionResponse;
+            const errorResponse: ApiResponse<void> = result;
+            console.error("Server Error:", errorResponse);
+            alert(errorResponse.message);
+            throw errorResponse; // Re-throw as BaseExceptionResponse
         }
 
-        // Return parsed ApiResponse if successful
-        return apiResponse as ApiResponse<RiftResponseDto>;
+        // Return parsed success response as T
+        return result as R;
     } catch (error) {
         console.error("Failed to send match data:", error);
-        // Re-throw the error for higher-level handling
         throw error;
     }
 };
+
+// 평범하게 사용되는 일반적인 fetch
+export const uFetch = async <T,R>(data: T,endPoint: string, methods: string): Promise<R> => {
+    const { public: { baseApi } } = useRuntimeConfig();
+    const url = baseApi + endPoint;
+    const body = JSON.stringify(data);
+
+    try {
+        const response = await fetch(url, {
+            credentials: "include",
+            method: methods,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body,
+        });
+
+        const result = await response.json();
+
+        // Handle non-OK status (failure case)
+        if (!response.ok) {
+            const errorResponse: ApiResponse<void> = result;
+            console.error("Server Error:", errorResponse);
+            alert(errorResponse.message);
+            throw errorResponse; // Re-throw as BaseExceptionResponse
+        }
+
+        // Return parsed success response as T
+        return result as R;
+    } catch (error) {
+        console.error("Failed to send match data:", error);
+        throw error;
+    }
+};
+

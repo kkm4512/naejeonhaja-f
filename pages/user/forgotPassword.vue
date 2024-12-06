@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolRift />
+    forgotPassword
 </template>
 
 <style lang="postcss" scoped>

@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolRift />
+    Valorant
 </template>
 
 <style lang="postcss" scoped>

@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useLolStore } from '~/stores/lol/useLolStore';
 import type { ApiResponse, Tier } from '~/types/common';
-import type { AbyssRequestPlayer } from '~/types/req/reqLolDto';
-import type { AbyssResponseDto } from '~/types/res/resLolDto';
+import type { AbyssRequestPlayer, TftRequestPlayer } from '~/types/req/reqLolDto';
+import type { TftResponseDto } from '~/types/res/resLolDto';
 
 const router = useRouter(); // Vue Router 사용
 const lolStore = useLolStore();
@@ -30,7 +30,7 @@ const tiers: Tier[] = [
 
 
 // 모든 플레이어 정보를 저장
-const players = ref<AbyssRequestPlayer[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0] })));
+const players = ref<AbyssRequestPlayer[]>(Array.from({ length: 8 }, () => ({ name: "", tier: tiers[0] })));
 
 // 랜덤 데이터 생성 함수
 const generateRandomData = () => {
@@ -56,21 +56,22 @@ const generateRandomData = () => {
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
   try {
-    const response= await lolFetch<AbyssRequestPlayer,ApiResponse<AbyssResponseDto>>(players.value, "abyss");
-    lolStore.setAbyssResponseDto(response);
-    lolStore.setAbyssRequestPlayer(players.value);
-    router.push("/game/lol/abyssResult")
+    const response = await lolFetch<TftRequestPlayer,ApiResponse<TftResponseDto>>(players.value, "tft");
+    lolStore.setTftResponseDto(response);
+    lolStore.setTftRequestPlayer(players.value);
+    router.push("/game/lol/tftResult")
   } catch (error) {
     console.error("Failed to send players:", error);
     alert("플레이어 정보를 전송하는 데 실패했습니다.");
   }
 };
 
+// 부모 컴포넌트로부터 받는 제목
 </script>
 
 <template>
   <div class="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6"> 칼바람 나락 </h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-6"> 롤토체스 </h1>
 
     <!-- 랜덤 데이터 생성 버튼 -->
     <button
@@ -90,7 +91,7 @@ const sendToServer = async () => {
         <div class="w-1/2 px-4">
           <ul class="space-y-4">
             <li
-              v-for="(player, index) in players.slice(0, 5)"
+              v-for="(player, index) in players.slice(0, 4)"
               :key="index"
               class="p-3 bg-gray-100 border border-gray-300 rounded-md"
             >
@@ -112,7 +113,7 @@ const sendToServer = async () => {
         <div class="w-1/2 px-4">
           <ul class="space-y-4">
             <li
-              v-for="(player, index) in players.slice(5, 10)"
+              v-for="(player, index) in players.slice(4, 8)"
               :key="index + 5"
               class="p-3 bg-gray-100 border border-gray-300 rounded-md"
             >

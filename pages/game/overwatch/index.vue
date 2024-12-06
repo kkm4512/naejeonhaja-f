@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolRift />
+    Overwatch
 </template>
 
 <style lang="postcss" scoped>

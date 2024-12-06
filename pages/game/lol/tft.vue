@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolRift />
+    <LolTft />
 </template>
 
 <style lang="postcss" scoped>
