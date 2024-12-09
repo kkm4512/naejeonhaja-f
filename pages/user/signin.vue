@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-import type { ApiResponse, SigninDto } from "~/types/common";
+import type { ApiResponse } from "~/types/common";
+import type { SigninDto } from "~/types/user/req/SigninDto";
 const router = useRouter();
 
 const signinDto = ref<SigninDto>({
@@ -10,7 +11,7 @@ const signinDto = ref<SigninDto>({
 
 
 const handleLogin = async () => {
-  const response = await xFetch<SigninDto,ApiResponse<void>>(signinDto.value,"/users/signin","POST")
+  const response = await uFetch<SigninDto,ApiResponse<void>>(signinDto.value,"/users/signin","POST")
     if (response.code == 200) {
         router.push("/")
       }

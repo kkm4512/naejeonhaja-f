@@ -1,22 +1,22 @@
 import { defineStore } from 'pinia';
 import type { ApiResponse } from '~/types/common';
-import type { RiftRequestPlayer } from '~/types/req/reqLolDto';
-import type { RiftResponseDto } from '~/types/res/resLolDto';
+import type { RiftPlayerRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+import type { RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
 export const useLolStore = defineStore('game', {
   state: () => ({
     // Rift
-    riftResponseDto: null as ApiResponse<RiftResponseDto> | null,
-    riftRequestPlayer: [] as RiftRequestPlayer[]
+    riftTeamResponseDto: null as ApiResponse<RiftTeamResponseDto> | null,
+    riftPlayerRequestDto: [] as RiftPlayerRequestDto[]
   }),
   actions: {
-    setRiftResponseDto(data: ApiResponse<RiftResponseDto>) {
-      this.riftResponseDto = data;
-      localStorage.setItem('riftResponseDto', JSON.stringify(data));
+    setRiftTeamResponseDto(data: ApiResponse<RiftTeamResponseDto>) {
+      this.riftTeamResponseDto = data;
+      localStorage.setItem('riftTeamResponseDto', JSON.stringify(data));
     },
-    setRiftRequestPlayer(players: RiftRequestPlayer[]) {
-      this.riftRequestPlayer = players;
-      localStorage.setItem('riftRequestPlayer', JSON.stringify(players));
+    setRiftPlayerRequestDto(players: RiftPlayerRequestDto[]) {
+      this.riftPlayerRequestDto = players;
+      localStorage.setItem('riftPlayerRequestDto', JSON.stringify(players));
     },
   }
 });

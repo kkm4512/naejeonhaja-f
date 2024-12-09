@@ -1,0 +1,1 @@
+export type UserRole = "ROLE_USER" | "ROLE_ADMIN"; // Enum 타입 정의 (Java Enum에 맞게 설정)

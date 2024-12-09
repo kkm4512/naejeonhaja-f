@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useLolStore } from '~/stores/lol/useLolStore';
-import type { RiftResponseDto } from '~/types/res/resLolDto';
 import type { ApiResponse } from '~/types/common';
-import type { RiftRequestPlayer } from '~/types/req/reqLolDto';
+import type { RiftPlayerRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+import type { RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
 const lolStore = useLolStore();
 
@@ -33,14 +33,14 @@ const getTierGroupClass = (tier: string) => {
 // 팀 다시 구성하기 메서드
 const recomposeTeam = async () => {
   try {
-    const reqPlayers:RiftRequestPlayer[] = JSON.parse(localStorage.getItem('riftRequestPlayer') || '[]'); // 로컬스토리지에서 reqPlayers 가져오기
+    const reqPlayers:RiftPlayerRequestDto[] = JSON.parse(localStorage.getItem('riftPlayerRequestDto') || '[]'); // 로컬스토리지에서 reqPlayers 가져오기
     if (!reqPlayers.length) {
       alert('팀 구성 데이터가 존재하지 않습니다.');
       return;
     }
 
-    const riftResponseDto = await xFetch<RiftRequestPlayer[],ApiResponse<RiftResponseDto>>(reqPlayers, "/game/lol/rift/reCreate", "POST");
-    lolStore.setRiftResponseDto(riftResponseDto); // 결과 업데이트
+    const response = await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(reqPlayers, "/game/lol/rift", "POST");
+    lolStore.setRiftTeamResponseDto(response); // 결과 업데이트
   } catch (error) {
     console.error("Failed to recompose team:", error);
     alert("팀을 다시 구성하는 데 실패했습니다.");
@@ -55,14 +55,14 @@ const recomposeTeam = async () => {
       <div class="flex flex-col items-center">
         <span class="text-2xl font-semibold text-blue-600">Team A</span>
         <span class="text-lg font-bold text-blue-800">
-          Total MMR: {{ calculateTotalMMR(lolStore.riftResponseDto?.data.teamA || []) }}
+          Total MMR: {{ calculateTotalMMR(lolStore.riftTeamResponseDto?.data.teamA || []) }}
         </span>
       </div>
       <span class="text-lg font-bold text-gray-500">VS</span>
       <div class="flex flex-col items-center">
         <span class="text-2xl font-semibold text-red-600">Team B</span>
         <span class="text-lg font-bold text-red-800">
-          Total MMR: {{ calculateTotalMMR(lolStore.riftResponseDto?.data.teamB || []) }}
+          Total MMR: {{ calculateTotalMMR(lolStore.riftTeamResponseDto?.data.teamB || []) }}
         </span>
       </div>
     </div>
@@ -74,7 +74,7 @@ const recomposeTeam = async () => {
         <h2 class="text-xl font-semibold text-blue-600 mb-4">Team A</h2>
         <ul class="space-y-2">
           <li
-            v-for="(player, index) in lolStore.riftResponseDto?.data.teamA"
+            v-for="(player, index) in lolStore.riftTeamResponseDto?.data.teamA"
             :key="index"
             :class="`flex items-center gap-4 p-2 rounded-lg border-4 ${getTierGroupClass(player.tier)}`"
           >
@@ -104,7 +104,7 @@ const recomposeTeam = async () => {
         <h2 class="text-xl font-semibold text-red-600 mb-4">Team B</h2>
         <ul class="space-y-2">
           <li
-            v-for="(player, index) in lolStore.riftResponseDto?.data.teamB"
+            v-for="(player, index) in lolStore.riftTeamResponseDto?.data.teamB"
             :key="index"
             :class="`flex items-center gap-4 p-2 rounded-lg border-4 ${getTierGroupClass(player.tier)}`"
           >
