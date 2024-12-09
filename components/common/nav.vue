@@ -14,12 +14,11 @@ const lolToggleDropdown = () => {
 // 사용자 상태
 const jwt = ref<string>("");
 const nickname = ref<string | null>(null)
-const cookie = ref(useCookie("Authorization").value);
+const cookie = getCookie();
 
 // 로그아웃 로직
 const logout = async () => {
-  await removeCookie();
-  jwt.value = ""; // 쿠키 삭제
+  removeCookie();
   window.location.reload(); // 페이지 새로고침
 };
 

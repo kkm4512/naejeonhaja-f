@@ -1,5 +1,6 @@
 import type {Tier, Lines } from "../common";
 
+// Rift
 export type RiftResponsePlayer = {
     name: string;
     tier: Tier;
@@ -8,35 +9,19 @@ export type RiftResponsePlayer = {
     mmrReduced: boolean; 
 };
 
+export type RiftResponsePayload = {
+  playerHistoryTitle: string; 
+  lolPlayerDtos: RiftResponsePlayer[]; 
+};
 
-// lolFetcg Response Type
+export type RiftResponseSimplePayload = {
+  playerHistoryTitle: string; 
+  playerHistoryId: number; 
+};
+
 export interface RiftResponseDto {
     teamA: RiftResponsePlayer[];  // Team A의 플레이어 리스트
     teamB: RiftResponsePlayer[];  // Team B의 플레이어 리스트
-}
-
-export type AbyssResponsePlayer = {
-  name: string;
-  tier: Tier;
-  mmr: number;
-};
-
-
-export interface AbyssResponseDto {
-  teamA: AbyssResponsePlayer[];  // Team A의 플레이어 리스트
-  teamB: AbyssResponsePlayer[];  // Team B의 플레이어 리스트
-}
-
-export type TftResponsePlayer = {
-  name: string;
-  tier: Tier;
-  mmr: number;
-};
-
-
-export interface TftResponseDto {
-  teamA: TftResponsePlayer[];  // Team A의 플레이어 리스트
-  teamB: TftResponsePlayer[];  // Team B의 플레이어 리스트
 }
 
 

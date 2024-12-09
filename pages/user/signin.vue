@@ -10,7 +10,7 @@ const signinDto = ref<SigninDto>({
 
 
 const handleLogin = async () => {
-  const response = await uFetch<SigninDto,ApiResponse<void>>(signinDto.value,"/users/signin","POST")
+  const response = await xFetch<SigninDto,ApiResponse<void>>(signinDto.value,"/users/signin","POST")
     if (response.code == 200) {
         router.push("/")
       }
