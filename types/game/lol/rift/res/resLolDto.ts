@@ -1,4 +1,4 @@
-import type {Tier, Lines } from "../common";
+import type { Lines, Tier } from "../common";
 
 // Rift
 export type RiftResponsePlayer = {
@@ -9,17 +9,17 @@ export type RiftResponsePlayer = {
     mmrReduced: boolean; 
 };
 
-export type RiftResponsePayload = {
+export type RiftPlayerHistoryResponseDetailDto = {
   playerHistoryTitle: string; 
   lolPlayerDtos: RiftResponsePlayer[]; 
 };
 
-export type RiftResponseSimplePayload = {
+export type RiftPlayerHistoryResponseSimpleDto = {
   playerHistoryTitle: string; 
   playerHistoryId: number; 
 };
 
-export interface RiftResponseDto {
+export interface RiftTeamResponseDto {
     teamA: RiftResponsePlayer[];  // Team A의 플레이어 리스트
     teamB: RiftResponsePlayer[];  // Team B의 플레이어 리스트
 }

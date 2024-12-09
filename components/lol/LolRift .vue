@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useLolStore } from '~/stores/lol/useLolStore';
-import type { ApiResponse, Line, LineRole, Lines, Tier } from '~/types/common';
-import type { RiftRequestPayload, RiftRequestPlayer } from '~/types/req/reqLolDto';
-import type { RiftResponseDto, RiftResponsePayload } from '~/types/res/resLolDto';
+import type { RiftPlayerHistoryRequestDto, RiftPlayerRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
 import PlayerHistory from '../game/LolPlayerHistory.vue';
 import LolFooter from './LolFooter.vue';
+import type { RiftPlayerHistoryResponseDetailDto, RiftTeamResponseDto, RiftResponsePlayer } from '~/types/game/lol/rift/res/resLolDto';
+import type { Line, LineRole, Lines, Tier } from '~/types/game/lol/rift/common';
+import type { ApiResponse } from '~/types/common';
 
 const router = useRouter(); 
 const lolStore = useLolStore();
@@ -35,7 +36,7 @@ const tiers: Tier[] = [
 ];
 
 onMounted(async() => {
-  const response = await oFetch<null,ApiResponse<RiftResponsePayload>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET");
+  const response = await uFetch<null,ApiResponse<RiftPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET");
   players.value = response.data.lolPlayerDtos;
   playerHistoryTitle.value = response.data.playerHistoryTitle;
 })
@@ -43,14 +44,14 @@ onMounted(async() => {
 const lines: Line[] = ["TOP", "JUNGLE", "MID", "AD", "SUPPORT"];
 
 // 모든 플레이어 정보를 저장
-const players = ref<RiftRequestPlayer[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
+const players = ref<RiftPlayerRequestDto[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
 const playerHistoryTitle = ref<string>("");
 
 
 // 플레이어 히스토리 제목 추가한 내용 ㅎㅎ;
-const playerPayload = computed(() => ({
+const riftPlayerHistoryRequestDto = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  riftRequestDtos: players.value,
+  riftPlayerRequestDtos: players.value,
 }));
 
 
@@ -90,7 +91,7 @@ const generateRandomData = () => {
 };
 
 // 역할 업데이트 함수
-const updatelines = (player: RiftRequestPlayer, line: Line, type: LineRole): void => {
+const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): void => {
   const existing = player.lines.find((l) => l.line === line);
 
   if (existing) {
@@ -114,11 +115,10 @@ const sendToServer = async () => {
     alert("대전내역이름을 작성해주세요 !")
     return;
   }
-  playerPayload.value.playerHistoryTitle = playerHistoryTitle.value;
-  console.log(playerPayload.value);
-  const response = await lolFetch<RiftRequestPayload,ApiResponse<RiftResponseDto>>(playerPayload.value, "rift");
-  lolStore.setRiftRequestPlayer(players.value);
-  lolStore.setRiftResponseDto(response);
+  riftPlayerHistoryRequestDto.value.playerHistoryTitle = playerHistoryTitle.value;
+  const response = await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/history","POST",true);
+  lolStore.setRiftPlayerRequestDto(players.value);
+  lolStore.setRiftTeamResponseDto(response);
   router.push("/game/lol/rift/result")
 };
 
@@ -259,20 +259,24 @@ const sendToServer = async () => {
               </ul>
             </div>
           </div>
+        <!-- 버튼을 감싸는 div 추가 -->
+        <div class="w-full bg-white rounded-lg p-6 flex justify-center">
+          <!-- 서버로 전송 버튼 -->
+          <button
+            @click="sendToServer"
+            class="mt-6 px-6 py-3 bg-orange-500 text-white text-lg font-medium rounded-md shadow hover:bg-orange-600 transition"
+          >
+            확인
+          </button>
         </div>
+
+        </div>        
       </div>
 
       <!-- 팀 히스토리 박스 -->
       <PlayerHistory class="ml-10 whitespace-nowrap" />
     </div>
 
-    <!-- 서버로 전송 버튼 -->
-    <button
-      @click="sendToServer"
-      class="mt-6 px-6 py-3 bg-orange-500 text-white text-lg font-medium rounded-md shadow hover:bg-orange-600 transition"
-    >
-      확인
-    </button>
   </div>
   <LolFooter />
 </template>

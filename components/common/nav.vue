@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import  { jwtDecode }  from "jwt-decode"; // npm install jwt-decode
-import type { User } from "~/types/common";
+import type { User } from "~/types/user/req/User";
 
 // LOL 드롭다운 상태 관리
 const isLolDropdownOpen = ref(false);
