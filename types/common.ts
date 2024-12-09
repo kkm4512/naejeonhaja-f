@@ -44,3 +44,15 @@ export interface User {
   password: string; 
   userRole: UserRole; 
 }
+
+// Page 타입 정의
+export type Page<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+};
+

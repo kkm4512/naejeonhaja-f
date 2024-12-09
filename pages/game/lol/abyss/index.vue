@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <LolAbyss />
+    Abyss
 </template>
 
 <style lang="postcss" scoped>

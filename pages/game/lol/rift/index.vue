@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import LolRift from '~/components/lol/LolRift .vue';
+
 
 </script>
 

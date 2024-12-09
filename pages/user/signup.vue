@@ -10,13 +10,13 @@ const signupDto = ref<SignupDto>({
 });
 
 const handleSignup = async () => {
-  const response = await uFetch<SignupDto, ApiResponse<void>>(signupDto.value, "/users/signup", "POST");
+  const response = await xFetch<SignupDto, ApiResponse<void>>(signupDto.value, "/users/signup", "POST");
   if (response.code === 200) {
     const signinDto = ref<SigninDto>({
       email: signupDto.value.email,
       password: signupDto.value.password,
     }); 
-    const response2 = await uFetch<SigninDto, ApiResponse<void>>(signinDto.value, "/user/signin", "POST");
+    const response2 = await xFetch<SigninDto, ApiResponse<void>>(signinDto.value, "/users/signin", "POST");
       if (response2.code == 200) {
         router.push("/")
       }
