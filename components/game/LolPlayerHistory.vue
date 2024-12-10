@@ -26,6 +26,7 @@ const togglePlayerHistory = async () => {
 // 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
   const response = await uFetch<null, ApiResponse<Page<RiftPlayerHistoryResponseSimpleDto>>>(null,`/game/lol/rift/playerHistory/simple/${page}`,'GET', true);
+  console.log(response)
   if (response && response.data) {
     riftPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
     totalPages.value = response.data.totalPages; // 총 페이지 수 저장

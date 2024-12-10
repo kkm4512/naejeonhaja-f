@@ -1,6 +1,7 @@
 import type { ApiResponse } from "~/types/common";
 
 export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: string,requiresAuth: boolean = false): Promise<R> => {
+  const { $redirectToLogin } = useNuxtApp();
     const { public: { baseApi } } = useRuntimeConfig();
     const jwt = requiresAuth ? getCookie() : null;
     const url = baseApi + endPoint;
@@ -33,15 +34,16 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       // Handle non-OK status (failure case)
       if (!response.ok) {
         const errorResponse: ApiResponse<void> = result;
-        console.error("Server Error:", errorResponse);
         alert(errorResponse.message);
+        if (errorResponse.code === 403) {
+          $redirectToLogin()
+        }
         throw errorResponse; // Re-throw as BaseExceptionResponse
       }
   
       // Return parsed success response as R
       return result as R;
     } catch (error) {
-      console.error("Failed to send match data:", error);
       throw error;
     }
   };
