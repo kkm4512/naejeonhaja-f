@@ -36,12 +36,17 @@ const tiers: Tier[] = [
 ];
 
 onMounted(async() => {
-  const response = await uFetch<null,ApiResponse<RiftPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET");
-  players.value = response.data.lolPlayerDtos;
-  playerHistoryTitle.value = response.data.playerHistoryTitle;
+  if (props.id) {
+    const response = await uFetch<null,ApiResponse<RiftPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
+    players.value = response.data.lolPlayerDtos;
+    playerHistoryTitle.value = response.data.playerHistoryTitle;
+  }
 })
 
 const lines: Line[] = ["TOP", "JUNGLE", "MID", "AD", "SUPPORT"];
+
+// 데이터 저장 여부 상태
+const saveData = ref(false);
 
 // 모든 플레이어 정보를 저장
 const players = ref<RiftPlayerRequestDto[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
@@ -111,12 +116,10 @@ const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): 
 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
-  if (playerHistoryTitle.value === "") {
-    alert("대전내역이름을 작성해주세요 !")
-    return;
-  }
   riftPlayerHistoryRequestDto.value.playerHistoryTitle = playerHistoryTitle.value;
-  const response = await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/history","POST",true);
+  const response = 
+  saveData.value ? await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/history","POST",true)
+  : await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(players.value, "/game/lol/rift","POST",false)
   lolStore.setRiftPlayerRequestDto(players.value);
   lolStore.setRiftTeamResponseDto(response);
   router.push("/game/lol/rift/result")
@@ -259,17 +262,25 @@ const sendToServer = async () => {
               </ul>
             </div>
           </div>
-        <!-- 버튼을 감싸는 div 추가 -->
-        <div class="w-full bg-white rounded-lg p-6 flex justify-center">
-          <!-- 서버로 전송 버튼 -->
-          <button
-            @click="sendToServer"
-            class="mt-6 px-6 py-3 bg-orange-500 text-white text-lg font-medium rounded-md shadow hover:bg-orange-600 transition"
-          >
-            확인
-          </button>
-        </div>
-
+          <!-- 버튼을 감싸는 div 추가 -->
+          <div class="w-full bg-white rounded-lg p-6 flex justify-center items-center space-x-4">
+            <!-- 서버로 전송 버튼 -->
+            <button
+              @click="sendToServer"
+              class="px-6 py-3 bg-orange-500 text-white text-lg font-medium rounded-md shadow hover:bg-orange-600 transition"
+            >
+              확인
+            </button>
+            <!-- 데이터 저장 여부 체크박스 -->
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                v-model="saveData"
+                class="form-checkbox h-5 w-5 text-orange-500 rounded"
+              />
+              <span class="ml-2 text-gray-700 text-sm">데이터 저장</span>
+            </label>            
+          </div>
         </div>        
       </div>
 

@@ -42,7 +42,6 @@ const recomposeTeam = async () => {
     const response = await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(reqPlayers, "/game/lol/rift", "POST");
     lolStore.setRiftTeamResponseDto(response); // 결과 업데이트
   } catch (error) {
-    console.error("Failed to recompose team:", error);
     alert("팀을 다시 구성하는 데 실패했습니다.");
   }
 };
