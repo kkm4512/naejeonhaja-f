@@ -2,11 +2,13 @@
 import { useLolStore } from '~/stores/lol/useLolStore';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 import type { ApiResponse } from '~/types/common';
-import type { RiftPlayerRequestDto, RiftPlayerResultHistoryRequestDto, RiftTeamResultRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
-import type { RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { RiftPlayerRequestDto, RiftPlayerResultHistoryRequestDto, RiftPlayerResultRequestDto, RiftTeamResultRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+import type { RiftPlayerResultHistoryResponseDetailDto, RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
 const lolStore = useLolStore();
 const switchStore = useSwitchStore();
+const route = useRoute();
+const id = route.params.id;
 
 const calculateTotalMMR = (team: any[]) => {
   return team.reduce((total, player) => total + player.mmr, 0);
@@ -19,6 +21,9 @@ const riftPlayerResultHistoryRequestDto: Ref<RiftPlayerResultHistoryRequestDto> 
   teamA: lolStore.getRiftPlayerResultHistoryRequestDto()?.teamA || { outcome: null, team: [] },
   teamB: lolStore.getRiftPlayerResultHistoryRequestDto()?.teamB || { outcome: null, team: [] },
 }));
+
+// 대전결과 상세 정보 가져오기
+const response = await uFetch<null,ApiResponse<RiftPlayerResultHistoryResponseDetailDto>>(null,`/game/lol/rift/playerResultHistory/detail/${id}`,"GET",true)
 
 
 
@@ -51,57 +56,8 @@ const getAbbreviatedLine = (line: string | undefined) => {
   return lineAbbreviations[line] || line; // 매칭되지 않는 경우 원래 라인 이름 반환
 };
 
-// 팀 다시 구성하기 메서드
-const recomposeTeam = async () => {
-  try {
-    if (!lolStore.getRiftPlayerRequestDto()) {
-      alert('팀 구성 데이터가 존재하지 않습니다.');
-      return;
-    }
-    const response = await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(lolStore.getRiftPlayerRequestDto(), "/game/lol/rift", "POST");
-    // 다시 구성했을떄의 팀원을 넣음
-    riftPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
-    riftPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
-    lolStore.setRiftTeamResponseDto(response.data); // 결과 업데이트
-  } catch (error) {
-    alert("팀을 다시 구성하는 데 실패했습니다.");
-  }
-};
-
-// 이전으로 버튼
-const goBack = () => {
-  switchStore.onRiftGoBackedSwitch();
-  window.history.back();
-};
-
-// 저장 버튼
-const saveTeam = async() => {
-  lolStore.updateRiftPlayerReulstHisotryRequestDto(riftPlayerResultHistoryRequestDto.value);
-  console.log(riftPlayerResultHistoryRequestDto.value)
-  const response = await uFetch<RiftPlayerResultHistoryRequestDto,ApiResponse<null>>(riftPlayerResultHistoryRequestDto.value,"/game/lol/rift/playerResultHistory","POST",true);
-  if (response.code === 200) {
-    alert("저장에 성공 하였습니다 !")
-  }
-};
-
 // 승리팀
 const winner = ref<string>('');
-
-// 승리 선언 함수
-const declareWinner = (team: string) => {
-  winner.value = team; // 승리한 팀 설정
-  
-  if (team === 'TeamA') {
-    riftPlayerResultHistoryRequestDto.value.teamA.outcome = "WINNER"
-    riftPlayerResultHistoryRequestDto.value.teamB.outcome = "LOSE";
-  } else if (team === 'TeamB') {
-    riftPlayerResultHistoryRequestDto.value.teamA.outcome = "LOSE";
-    riftPlayerResultHistoryRequestDto.value.teamB.outcome = "WINNER";
-  } else if (team === 'Draw') {
-    riftPlayerResultHistoryRequestDto.value.teamA.outcome = "DRAW";
-    riftPlayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
-  }
-};
 
 </script>
 
@@ -114,13 +70,11 @@ const declareWinner = (team: string) => {
         <label for="match-name" class="block text-xl font-semibold text-gray-800 mb-2">
           대전 결과 이름
         </label>
-        <input
-          id="match-name"
-          v-model="playerResultHistoryTitle"
-          type="text"
-          placeholder="저장할 대전 결과 이름을 기재하세요"
+        <div
           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-        />
+        >
+        {{ response.data.playerResultHistoryTitle }}
+        </div>
       </div>
 
       <!-- Team A vs Team B -->
@@ -128,14 +82,14 @@ const declareWinner = (team: string) => {
         <div class="flex flex-col items-center">
           <span class="text-3xl font-bold text-blue-700">Team A</span>
           <span class="text-lg font-semibold text-blue-800">
-            Total MMR: {{ calculateTotalMMR(lolStore.getRiftTeamResponseDto()?.teamA || []) }}
+            Total MMR: {{ calculateTotalMMR(response.data.teamA || []) }}
           </span>
         </div>
         <span class="text-2xl font-extrabold text-gray-600">VS</span>
         <div class="flex flex-col items-center">
           <span class="text-3xl font-bold text-red-700">Team B</span>
           <span class="text-lg font-semibold text-red-800">
-            Total MMR: {{ calculateTotalMMR(lolStore.getRiftTeamResponseDto()?.teamB || []) }}
+            Total MMR: {{ calculateTotalMMR(response.data.teamB || []) }}
           </span>
         </div>
       </div>
@@ -145,23 +99,23 @@ const declareWinner = (team: string) => {
         <!-- Team A -->
         <div
           class="relative p-6 rounded-xl shadow-lg transition"
-          :class="winner === 'TeamB' ? 'bg-blue-200 opacity-80' : winner === 'Draw' ? 'bg-blue-100' : 'bg-blue-50'"
+          :class="response.data.teamA[0].outcome === 'WINNER' ? 'bg-blue-200 opacity-80' : response.data.teamA[0].outcome === 'DRAW' ? 'bg-blue-100' : 'bg-blue-50'"
         >
           <!-- Winner/Lose/Draw 표시 -->
           <div
-            v-if="winner === 'TeamA'"
+            v-if="response.data.teamA[0].outcome === 'WINNER'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-yellow-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Winner
           </div>
           <div
-            v-if="winner === 'TeamB'"
+            v-if="response.data.teamA[0].outcome === 'LOSE'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-300 text-gray-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Lose
           </div>
           <div
-            v-if="winner === 'Draw'"
+            v-if="response.data.teamA[0].outcome === 'DRAW'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-200 text-gray-700 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Draw
@@ -169,7 +123,7 @@ const declareWinner = (team: string) => {
           <h2 class="text-xl font-bold text-blue-700 mb-4">Team A</h2>
           <ul class="space-y-3">
             <li
-              v-for="(player, index) in lolStore.getRiftTeamResponseDto()?.teamA"
+              v-for="(player, index) in response.data.teamA"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
             >
@@ -195,35 +149,28 @@ const declareWinner = (team: string) => {
               </div>
             </li>
           </ul>
-          <!-- Team A 승리 버튼 -->
-          <button
-            @click="declareWinner('TeamA')"
-            class="mt-4 w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
-          >
-            Team A 승리
-          </button>
         </div>
 
         <!-- Team B -->
         <div
           class="relative p-6 rounded-xl shadow-lg transition"
-          :class="winner === 'TeamA' ? 'bg-red-200 opacity-80' : winner === 'Draw' ? 'bg-red-100' : 'bg-red-50'"
+          :class="response.data.teamB[0].outcome === 'WINNER' ? 'bg-blue-200 opacity-80' : response.data.teamB[0].outcome === 'DRAW' ? 'bg-red-100' : 'bg-red-50'"
         >
           <!-- Winner/Lose/Draw 표시 -->
           <div
-            v-if="winner === 'TeamB'"
+            v-if="response.data.teamB[0].outcome === 'WINNER'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-yellow-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Winner
           </div>
           <div
-            v-if="winner === 'TeamA'"
+            v-if="response.data.teamB[0].outcome === 'LOSE'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-300 text-gray-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Lose
           </div>
           <div
-            v-if="winner === 'Draw'"
+            v-if="response.data.teamB[0].outcome === 'DRAW'"
             class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-200 text-gray-700 text-sm font-bold py-1 px-4 rounded-full shadow-md"
           >
             Draw
@@ -231,7 +178,7 @@ const declareWinner = (team: string) => {
           <h2 class="text-xl font-bold text-red-700 mb-4">Team B</h2>
           <ul class="space-y-3">
             <li
-              v-for="(player, index) in lolStore.getRiftTeamResponseDto()?.teamB"
+              v-for="(player, index) in response.data.teamB"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
             >
@@ -257,47 +204,9 @@ const declareWinner = (team: string) => {
               </div>
             </li>
           </ul>
-          <!-- Team B 승리 버튼 -->
-          <button
-            @click="declareWinner('TeamB')"
-            class="mt-4 w-full py-3 bg-red-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-red-700 hover:scale-105 transition"
-          >
-            Team B 승리
-          </button>
         </div>
-      </div>
-
-      <!-- 무승부 버튼 -->
-      <div class="mt-8 flex justify-center">
-        <button
-          @click="declareWinner('Draw')"
-          class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
-        >
-          무승부
-        </button>
-      </div>
-
-      <!-- 이전으로, 팀 다시 구성하기, 저장 버튼 -->
-      <div class="mt-6 flex justify-between gap-4">
-        <button
-          @click="goBack"
-          class="w-full px-6 py-3 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
-        >
-          이전으로
-        </button>
-        <button
-          @click="recomposeTeam"
-          class="w-full px-6 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
-        >
-          팀 다시 구성하기
-        </button>
-        <button
-          @click="saveTeam"
-          class="w-full px-6 py-3 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
-        >
-          저장
-        </button>
       </div>
     </div>
   </div>
+  <LolFooter />
 </template>

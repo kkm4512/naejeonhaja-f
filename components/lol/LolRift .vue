@@ -1,15 +1,16 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import { useLolStore } from '~/stores/lol/useLolStore';
-import type { RiftPlayerHistoryRequestDto, RiftPlayerRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+import type { RiftPlayerHistoryRequestDto, RiftPlayerRequestDto, RiftPlayerResultHistoryRequestDto, RiftPlayerResultRequestDto, RiftTeamResultRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
 import PlayerHistory from '../game/LolPlayerHistory.vue';
 import LolFooter from './LolFooter.vue';
-import type { RiftPlayerHistoryResponseDetailDto, RiftTeamResponseDto, RiftResponsePlayer } from '~/types/game/lol/rift/res/resLolDto';
+import type { RiftPlayerHistoryResponseDetailDto, RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 import type { Line, LineRole, Lines, Tier } from '~/types/game/lol/rift/common';
 import type { ApiResponse } from '~/types/common';
+import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 
 const router = useRouter(); 
 const lolStore = useLolStore();
+const switchStore = useSwitchStore();
 
 const props = defineProps<{
   id?: number | null;
@@ -36,9 +37,15 @@ const tiers: Tier[] = [
 ];
 
 onMounted(async() => {
+  // true라면 사용자가 goBack을 눌렀다는 뜻
+  if (switchStore.getRiftGoBackedSwtich()) {
+    players.value = lolStore.getRiftPlayerRequestDto();
+    playerHistoryTitle.value = lolStore.getRiftPlayerHisotryRequestDto()?.playerHistoryTitle ?? "";
+    return;
+  }
   if (props.id) {
     const response = await uFetch<null,ApiResponse<RiftPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
-    players.value = response.data.lolPlayerDtos;
+    players.value = response.data.riftPlayerResponseDtos;
     playerHistoryTitle.value = response.data.playerHistoryTitle;
   }
 })
@@ -97,6 +104,7 @@ const generateRandomData = () => {
 
 // 역할 업데이트 함수
 const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): void => {
+  // 기존 라인 찾기
   const existing = player.lines.find((l) => l.line === line);
 
   if (existing) {
@@ -110,18 +118,48 @@ const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): 
     // 새 라인 추가
     player.lines.push({ line, lineRole: type });
   }
+
+  // lineRole이나 line이 null인 경우 해당 요소 제거
+  player.lines = player.lines.filter((l) => l.line !== null && l.lineRole !== null);
 };
+
 
 
 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
+  console.log(players.value)
   riftPlayerHistoryRequestDto.value.playerHistoryTitle = playerHistoryTitle.value;
+  // 다시 확인버튼누르면 True로 바꿈
+  switchStore.offRiftGoBackedSwitch();
   const response = 
-  saveData.value ? await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/history","POST",true)
+  // 저장 체크박스가 선택 O
+  saveData.value ? await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true)
+    // 저장 체크박스 선택 X
   : await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(players.value, "/game/lol/rift","POST",false)
+    // GoBack 전용
+  lolStore.setRiftPlayerHisotryRequestDto(riftPlayerHistoryRequestDto.value);
+  // Result 전용 - 초기의 인원 구성을 기억하기 위함
   lolStore.setRiftPlayerRequestDto(players.value);
-  lolStore.setRiftTeamResponseDto(response);
+  // Result 전용 - 서버로부터 받은 팀원 결과를 기억하기 위함
+  lolStore.setRiftTeamResponseDto(response.data);
+  // Result Save 전용
+  const teamA: RiftPlayerResultRequestDto[] = response.data.teamA;
+  const teamB: RiftPlayerResultRequestDto[] = response.data.teamB;
+  const riftTeamResultRequestDtoA: RiftTeamResultRequestDto = ({
+    outcome: null,
+    team: teamA,
+  })
+  const riftTeamResultRequestDtoB: RiftTeamResultRequestDto = ({
+    outcome: null,
+    team: teamB,
+  })  
+  const riftPlayerResultHistoryRequestDto: RiftPlayerResultHistoryRequestDto = ({
+    playerResultHistoryTitle: "",
+    teamA: riftTeamResultRequestDtoA,
+    teamB: riftTeamResultRequestDtoB
+  })
+  lolStore.updateRiftPlayerReulstHisotryRequestDto(riftPlayerResultHistoryRequestDto)
   router.push("/game/lol/rift/result")
 };
 

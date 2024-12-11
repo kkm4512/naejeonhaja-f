@@ -16,11 +16,6 @@ const jwt = ref<string>("");
 const nickname = ref<string | null>(null)
 const cookie = getCookie();
 
-// 로그아웃 로직
-const logout = async () => {
-  removeCookie();
-  window.location.reload(); // 페이지 새로고침
-};
 
 onMounted( async() => {
   if (cookie.value) {
@@ -42,6 +37,12 @@ watch(
   }
 );
 
+// 상태 관리
+const isResultDropdownOpen = ref(false)
+
+const resultToggleDropdown = () => {
+  isResultDropdownOpen.value = !isResultDropdownOpen.value
+}
 </script>
 
 <template>
@@ -133,21 +134,59 @@ watch(
             </ul>
           </li>
           <!-- LOL -->
-          <li>
+          <span class="mx-2 w-px h-6 bg-white hidden md:inline-block"></span>
+          <li class="relative">
+            <!-- 대전결과 -->
             <a
-              href="/game/overwatch"
-              class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+              href="#"
+              @click.prevent="resultToggleDropdown"
+              class="flex items-center py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
             >
-              OVERWATCH
+              내 대전결과
+              <!-- 화살표 아이콘 -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4 ml-1 transition-transform"
+                :class="{ 'rotate-180': isResultDropdownOpen }"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </a>
-          </li>
-          <li>
-            <a
-              href="/game/valorant"
-              class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+
+            <!-- 드롭다운 메뉴 -->
+            <ul
+              v-if="isResultDropdownOpen"
+              class="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg dark:bg-gray-800"
             >
-              VALORANT
-            </a>
+              <li>
+                <a
+                  href="/game/lol/rift/results"
+                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  소환사의 협곡
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/game/lol/abyss/results"
+                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  칼바람 나락
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/game/lol/tft/results"
+                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  롤토체스
+                </a>
+              </li>
+            </ul>
           </li>
           <span class="mx-2 w-px h-6 bg-white hidden md:inline-block"></span>
           <li>
@@ -165,13 +204,12 @@ watch(
             >
               {{ nickname }} 님 환영합니다
               <button
-                @click="logout"
+                @click="logout()"
                 class="ml-4 block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
               >
                 로그아웃
               </button>
             </span>
-
           </li>
         </ul>
       </div>

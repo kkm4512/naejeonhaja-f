@@ -38,6 +38,10 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
         if (errorResponse.code === 403) {
           $redirectToLogin()
         }
+        if (errorResponse.code === 401) {
+          logout();
+          $redirectToLogin();
+        }
         throw errorResponse; // Re-throw as BaseExceptionResponse
       }
   

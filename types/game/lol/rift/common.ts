@@ -16,3 +16,7 @@ export type Tier =
   | "CHALLENGER";
 
   export type LineRole = 'MAINLINE' | 'SUBLINE';
+
+  export type Outcome = "WINNER" | "DRAW" | "LOSE" | null;
+
+  export type Team = "TEAM_A" | "TEAM_B"

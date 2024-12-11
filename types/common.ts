@@ -4,12 +4,14 @@ export interface ApiResponse<T> {
     data: T; // 제네릭 데이터 타입
 }
 
-// Page 타입 정의
 export type Page<T> = {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+  page: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 };
+
 
