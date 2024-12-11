@@ -29,7 +29,7 @@ const getPlayerHistory = async (page: number) => {
   console.log(response)
   if (response && response.data) {
     riftPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
-    totalPages.value = response.data.totalPages; // 총 페이지 수 저장
+    totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
   } else {
     riftPlayerHistoryResponseSimpleDtos.value = []; // 데이터가 없으면 빈 배열
     totalPages.value = 0;
@@ -85,12 +85,13 @@ const changePage = async (page: number) => {
               :key="index"
               class="bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
             >
-            <a 
-              :href="`/game/lol/rift/${item.playerHistoryId}`" 
-              class="text-blue-500 hover:underline">
-              {{ item.playerHistoryTitle }}
-            </a>
-
+              <a 
+                :href="`/game/lol/rift/${item.playerHistoryId}`" 
+                class="text-blue-500 hover:underline block truncate"
+                title=" {{ item.playerHistoryTitle }}"
+              >
+                {{ item.playerHistoryTitle }}
+              </a>
             </li>
           </ul>
 
@@ -123,5 +124,13 @@ const changePage = async (page: number) => {
 <style scoped>
 .rotate-180 {
   transform: rotate(180deg);
+}
+
+a.truncate {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
