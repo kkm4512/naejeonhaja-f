@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
-import type { RiftPlayerHistoryResponseSimpleDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { LolPlayerHistoryResponseSimpleDto } from '~/types/game/lol/rift/res/resLolDto';
 
 // 히스토리 표시 여부
 const isHistoryVisible = ref(false);
 
 // 히스토리 데이터 및 페이지 관리
-const riftPlayerHistoryResponseSimpleDtos = ref<RiftPlayerHistoryResponseSimpleDto[]>([]);
+const riftPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
 const currentPage = ref(1); // 현재 페이지
 const totalPages = ref(0); // 총 페이지 수
 
@@ -25,7 +25,7 @@ const togglePlayerHistory = async () => {
 
 // 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
-  const response = await uFetch<null, ApiResponse<Page<RiftPlayerHistoryResponseSimpleDto>>>(null,`/game/lol/rift/playerHistory/simple/${page}`,'GET', true);
+  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(null,`/game/lol/rift/playerHistory/simple/${page}`,'GET', true);
   console.log(response)
   if (response && response.data) {
     riftPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장

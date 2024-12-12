@@ -1,32 +1,20 @@
-import type { Lines, Outcome, Tier } from "../common";
+import type { LolPlayerDto, LolTeamResultDto } from "../common";
 
-export type RiftPlayerHistoryRequestDto = {
-  playerHistoryTitle: string; 
-  riftPlayerRequestDtos: RiftPlayerRequestDto[]; 
+export type LolPlayerHistoryRequestDto = {
+  playerHistoryTitle: string | null; 
+  riftPlayerDtos: LolPlayerDto[] | []; 
 };
 
-export type RiftPlayerRequestDto = {
-  name: string;
-  tier: Tier;
-  lines: Lines[];
-};
-
-export type RiftPlayerResultHistoryRequestDto = {
+export type LolPlayerResultHistoryRequestDto = {
   playerResultHistoryTitle: string; 
-  teamA: RiftTeamResultRequestDto; 
-  teamB: RiftTeamResultRequestDto; 
+  teamA: LolTeamResultDto; 
+  teamB: LolTeamResultDto; 
 };
 
-export type RiftTeamResultRequestDto = {
-  outcome: Outcome;
-  team: RiftPlayerResultRequestDto[];
-}
 
-export type RiftPlayerResultRequestDto = {
-  name: string;
-  tier: Tier;
-  lines: Lines[];
-  mmrReduced: boolean; 
-};
+
+
+
+
 
 
