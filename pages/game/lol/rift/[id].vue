@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import LolRift from '~/components/lol/LolRift .vue';
+import LolRift from '~/components/game/LolRift.vue';
 
 // 현재 라우터 정보 가져오기
 const route = useRoute();

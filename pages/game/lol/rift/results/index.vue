@@ -66,16 +66,16 @@
     
   <script setup lang="ts">
   import type { ApiResponse, Page } from "~/types/common";
-  import type { RiftPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/rift/res/resLolDto";
+  import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/rift/res/resLolDto";
   
   // 데이터 상태 정의
-  const playerHistories = ref<RiftPlayerResultHistoryResponseSimpleDto[]>([]);
+  const playerHistories = ref<LolPlayerResultHistoryResponseSimpleDto[]>([]);
   const currentPage = ref(1);
   const totalPages = ref(1); // 총 페이지 수 초기화
   
   // 데이터 가져오기 함수
   const fetchPlayerHistories = async() => {
-      const response = await uFetch<null,ApiResponse<Page<RiftPlayerResultHistoryResponseSimpleDto>>>(null, `/game/lol/rift/playerResultHistory/simple/${currentPage.value}`, "GET", true);
+      const response = await uFetch<null,ApiResponse<Page<LolPlayerResultHistoryResponseSimpleDto>>>(null, `/game/lol/rift/playerResultHistory/simple/${currentPage.value}`, "GET", true);
         console.log(response)
       if (response?.data) {
         playerHistories.value = response.data.content

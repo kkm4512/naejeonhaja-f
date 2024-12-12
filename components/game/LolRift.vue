@@ -1,111 +1,56 @@
 <script lang="ts" setup>
-import { useLolStore } from '~/stores/lol/useLolStore';
-import type { RiftPlayerHistoryRequestDto, RiftPlayerRequestDto, RiftPlayerResultHistoryRequestDto, RiftPlayerResultRequestDto, RiftTeamResultRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
-import PlayerHistory from '../game/LolPlayerHistory.vue';
-import LolFooter from './LolFooter.vue';
-import type { RiftPlayerHistoryResponseDetailDto, RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
-import type { Line, LineRole, Lines, Tier } from '~/types/game/lol/rift/common';
+import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { Line, LineRole, LolPlayerDto, LolPlayerDto as riftPlayerDto, Tier } from '~/types/game/lol/rift/common';
 import type { ApiResponse } from '~/types/common';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
+import LolPlayerHistory from './LolPlayerHistory.vue';
+import { useLolStore } from '~/stores/lol/useLolStore';
 
-const router = useRouter(); 
-const lolStore = useLolStore();
-const switchStore = useSwitchStore();
-
+// Props
 const props = defineProps<{
   id?: number | null;
 }>();
 
-// 예시 데이터
-const sampleNicknames = [
-  "Summoner1", "Summoner2", "Summoner3", "Summoner4", "Summoner5",
-  "Summoner6", "Summoner7", "Summoner8", "Summoner9", "Summoner10"
-];
+// 데이터
+const lolStore = useLolStore();
+const router = useRouter(); 
+const switchStore = useSwitchStore();
+const tiers: Tier[] = getTiers();
+const lines: Line[] = getLines();
+const saveData = ref(false);
+const riftPlayerDto = ref<LolPlayerDto[]>(
+  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],lines: [],mmr: 0, mmrReduced: false, }))
+);
+const playerHistoryTitle = ref<string | null>("");
+const riftPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
+  playerHistoryTitle: playerHistoryTitle.value,
+  riftPlayerDtos: riftPlayerDto.value,
 
-const tiers: Tier[] = [
-  "UNRANKED",
-  "IRON_IV", "IRON_III", "IRON_II", "IRON_I",
-  "BRONZE_IV", "BRONZE_III", "BRONZE_II", "BRONZE_I",
-  "SILVER_IV", "SILVER_III", "SILVER_II", "SILVER_I",
-  "GOLD_IV", "GOLD_III", "GOLD_II", "GOLD_I",
-  "PLATINUM_IV", "PLATINUM_III", "PLATINUM_II", "PLATINUM_I",
-  "EMERALD_IV", "EMERALD_III", "EMERALD_II", "EMERALD_I",
-  "DIAMOND_IV", "DIAMOND_III", "DIAMOND_II", "DIAMOND_I",
-  "MASTER",
-  "GRANDMASTER",
-  "CHALLENGER"
-];
-
+}));
+ 
 onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
-  if (switchStore.getRiftGoBackedSwtich()) {
-    players.value = lolStore.getRiftPlayerRequestDto();
-    playerHistoryTitle.value = lolStore.getRiftPlayerHisotryRequestDto()?.playerHistoryTitle ?? "";
+  if (switchStore.getRiftGoBackedSwtich() && lolStore.riftInitTeam) {
+    playerHistoryTitle.value = lolStore.riftInitTeam?.playerHistoryTitle
+    riftPlayerDto.value = lolStore.riftInitTeam?.riftPlayerDtos
     return;
   }
   if (props.id) {
-    const response = await uFetch<null,ApiResponse<RiftPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
-    players.value = response.data.riftPlayerResponseDtos;
+    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
+    riftPlayerDto.value = response.data.riftPlayerResponseDtos;
   }
 })
 
-const lines: Line[] = ["TOP", "JUNGLE", "MID", "AD", "SUPPORT"];
-
-// 데이터 저장 여부 상태
-const saveData = ref(false);
-
-// 모든 플레이어 정보를 저장
-const players = ref<RiftPlayerRequestDto[]>(Array.from({ length: 10 }, () => ({ name: "", tier: tiers[0], lines: [] })));
-const playerHistoryTitle = ref<string>("");
 
 
-// 플레이어 히스토리 제목 추가한 내용 ㅎㅎ;
-const riftPlayerHistoryRequestDto = computed(() => ({
-  playerHistoryTitle: playerHistoryTitle.value,
-  riftPlayerRequestDtos: players.value,
-}));
-
-
-// 랜덤 데이터 생성 함수
-const generateRandomData = () => {
-  const usedNicknames = new Set<string>();
-  playerHistoryTitle.value = crypto.randomUUID();
-  const randomNickname = () => {
-    let nickname;
-    do {
-      nickname = sampleNicknames[Math.floor(Math.random() * sampleNicknames.length)];
-    } while (usedNicknames.has(nickname));
-    usedNicknames.add(nickname);
-    return nickname;
-  };
-
-  const randomTier = () => tiers[Math.floor(Math.random() * tiers.length)];
-
-  const randomlines = (): Lines[] => {
-    const selectedlines: Lines[] = [];
-    const lineCount = Math.floor(Math.random() * lines.length) + 1;
-    while (selectedlines.length < lineCount) {
-      const randomline = lines[Math.floor(Math.random() * lines.length)] as Line;
-      if (!selectedlines.find((l) => l.line === randomline)) {
-        const type = Math.random() > 0.5 ? "MAINLINE" : "SUBLINE";
-        selectedlines.push({ line: randomline, lineRole: type });
-      }
-    }
-    return selectedlines;
-  };
-
-  players.value.forEach((player) => {
-    player.name = randomNickname();
-    player.tier = randomTier();
-    player.lines = randomlines();
-  });
-};
+// 메서드
 
 // 역할 업데이트 함수
-const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): void => {
+const updatelines = (player: riftPlayerDto, line: Line, type: LineRole): void => {
   // 기존 라인 찾기
-  const existing = player.lines.find((l) => l.line === line);
+  const existing = player.lines?.find((l) => l.line === line);
 
   if (existing) {
     // 이미 선택된 라인인 경우 역할 변경
@@ -116,50 +61,23 @@ const updatelines = (player: RiftPlayerRequestDto, line: Line, type: LineRole): 
     }
   } else {
     // 새 라인 추가
-    player.lines.push({ line, lineRole: type });
+    player.lines?.push({ line, lineRole: type });
   }
 
   // lineRole이나 line이 null인 경우 해당 요소 제거
-  player.lines = player.lines.filter((l) => l.line !== null && l.lineRole !== null);
+  player.lines = player.lines?.filter((l) => l.line !== null && l.lineRole !== null);
 };
-
-
-
 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
-  console.log(players.value)
-  riftPlayerHistoryRequestDto.value.playerHistoryTitle = playerHistoryTitle.value;
+  // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
+  lolStore.setInitTeamsWithTitle(riftPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
   switchStore.offRiftGoBackedSwitch();
-  const response = 
-  // 저장 체크박스가 선택 O
-  saveData.value ? await uFetch<RiftPlayerHistoryRequestDto,ApiResponse<RiftTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true)
-    // 저장 체크박스 선택 X
-  : await uFetch<RiftPlayerRequestDto[],ApiResponse<RiftTeamResponseDto>>(players.value, "/game/lol/rift","POST",false)
-    // GoBack 전용
-  lolStore.setRiftPlayerHisotryRequestDto(riftPlayerHistoryRequestDto.value);
-  // Result 전용 - 초기의 인원 구성을 기억하기 위함
-  lolStore.setRiftPlayerRequestDto(players.value);
-  // Result 전용 - 서버로부터 받은 팀원 결과를 기억하기 위함
-  lolStore.setRiftTeamResponseDto(response.data);
-  // Result Save 전용
-  const teamA: RiftPlayerResultRequestDto[] = response.data.teamA;
-  const teamB: RiftPlayerResultRequestDto[] = response.data.teamB;
-  const riftTeamResultRequestDtoA: RiftTeamResultRequestDto = ({
-    outcome: null,
-    team: teamA,
-  })
-  const riftTeamResultRequestDtoB: RiftTeamResultRequestDto = ({
-    outcome: null,
-    team: teamB,
-  })  
-  const riftPlayerResultHistoryRequestDto: RiftPlayerResultHistoryRequestDto = ({
-    playerResultHistoryTitle: "",
-    teamA: riftTeamResultRequestDtoA,
-    teamB: riftTeamResultRequestDtoB
-  })
-  lolStore.updateRiftPlayerReulstHisotryRequestDto(riftPlayerResultHistoryRequestDto)
+  const response = saveData.value   
+  ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true) 
+  : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift","POST",false)
+  lolStore.setTeams(response.data.teamA,response.data.teamB);
   router.push("/game/lol/rift/result")
 };
 
@@ -174,7 +92,7 @@ const sendToServer = async () => {
         <!-- 랜덤 데이터 생성 버튼 -->
         <div class="flex justify-center">
           <button 
-            @click="generateRandomData"
+            @click="generateRandomData(playerHistoryTitle,riftPlayerDto);"
             class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition">
             랜덤 데이터 생성
           </button>
@@ -204,7 +122,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in players.slice(0, 5)"
+                  v-for="(player, index) in riftPlayerDto.slice(0, 5)"
                   :key="index"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -226,8 +144,8 @@ const sendToServer = async () => {
                         <button
                           class="px-3 py-1 rounded-md text-sm border"
                           :class="{
-                            'bg-gray-300 text-black': !player.lines.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
-                            'bg-blue-500 text-white': player.lines.find((l) => l.line === line && l.lineRole === 'MAINLINE')
+                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
+                            'bg-blue-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE')
                           }"
                           @click="updatelines(player, line, 'MAINLINE')"
                         >
@@ -236,8 +154,8 @@ const sendToServer = async () => {
                         <button
                           class="px-3 py-1 rounded-md text-sm border"
                           :class="{
-                            'bg-gray-300 text-black': !player.lines.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
-                            'bg-green-500 text-white': player.lines.find((l) => l.line === line && l.lineRole === 'SUBLINE')
+                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
+                            'bg-green-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE')
                           }"
                           @click="updatelines(player, line, 'SUBLINE')"
                         >
@@ -254,7 +172,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in players.slice(5, 10)"
+                  v-for="(player, index) in riftPlayerDto.slice(5, 10)"
                   :key="index + 5"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -276,8 +194,8 @@ const sendToServer = async () => {
                         <button
                           class="px-3 py-1 rounded-md text-sm border"
                           :class="{
-                            'bg-gray-300 text-black': !player.lines.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
-                            'bg-blue-500 text-white': player.lines.find((l) => l.line === line && l.lineRole === 'MAINLINE')
+                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
+                            'bg-blue-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE')
                           }"
                           @click="updatelines(player, line, 'MAINLINE')"
                         >
@@ -286,8 +204,8 @@ const sendToServer = async () => {
                         <button
                           class="px-3 py-1 rounded-md text-sm border"
                           :class="{
-                            'bg-gray-300 text-black': !player.lines.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
-                            'bg-green-500 text-white': player.lines.find((l) => l.line === line && l.lineRole === 'SUBLINE')
+                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
+                            'bg-green-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE')
                           }"
                           @click="updatelines(player, line, 'SUBLINE')"
                         >
@@ -321,11 +239,9 @@ const sendToServer = async () => {
           </div>
         </div>        
       </div>
-
       <!-- 팀 히스토리 박스 -->
-      <PlayerHistory class="ml-10 whitespace-nowrap" />
+      <LolPlayerHistory class="ml-10 whitespace-nowrap" />
     </div>
-
   </div>
   <LolFooter />
 </template>

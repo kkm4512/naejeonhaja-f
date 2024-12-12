@@ -20,3 +20,17 @@ export type Tier =
   export type Outcome = "WINNER" | "DRAW" | "LOSE" | null;
 
   export type Team = "TEAM_A" | "TEAM_B"
+
+  export type LolPlayerDto = {
+    name: string;
+    tier: Tier;
+    lines?: Lines[] | null;
+    mmr: number;
+    mmrReduced?: boolean | null;
+  };
+
+  export type LolTeamResultDto = {
+    outcome: Outcome;
+    team: LolPlayerDto[];
+  }
+

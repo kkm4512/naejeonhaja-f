@@ -1,49 +1,35 @@
 import { defineStore } from 'pinia';
-import type { RiftPlayerHistoryRequestDto, RiftPlayerRequestDto, RiftPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
-import type { RiftTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { LolPlayerDto } from "~/types/game/lol/rift/common";
+import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
 
-export const useLolStore = defineStore('game', {
+export const useLolStore = defineStore('lol', {
   state: () => ({
-    // Rift
-    riftTeamResponseDto: null as RiftTeamResponseDto | null,
-    riftPlayerRequestDto: [] as RiftPlayerRequestDto[],
-    riftPlayerHistoryRequestDto: null as RiftPlayerHistoryRequestDto | null,
-    riftPlayerResultHistoryRequestDto: null as RiftPlayerResultHistoryRequestDto | null,
-    riftTeamResultRequestDto: null as RiftPlayerResultHistoryRequestDto | null
-  }),  
+    riftTeamA: [] as LolPlayerDto[],
+    riftTeamB: [] as LolPlayerDto[],
+    riftInitTeam: null as LolPlayerHistoryRequestDto | null,
+  }),
   actions: {
-    setRiftTeamResponseDto(data: RiftTeamResponseDto) {
-      this.riftTeamResponseDto = data;
-      localStorage.setItem('riftTeamResponseDto', JSON.stringify(data));
+    setInitTeamsWithTitle(riftInitTeam: LolPlayerHistoryRequestDto) {
+      this.riftInitTeam = riftInitTeam;
+
+      // 데이터 저장
+      sessionStorage.setItem('riftInitTeam', JSON.stringify(riftInitTeam));
     },
-    getRiftTeamResponseDto():RiftTeamResponseDto | null {
-      return this.riftTeamResponseDto ?? null;
+    setTeams(riftTeamA: LolPlayerDto[], riftTeamB: LolPlayerDto[]) {
+      this.riftTeamA = riftTeamA;
+      this.riftTeamB = riftTeamB;
+
+      // 데이터 저장
+      sessionStorage.setItem('riftTeamA', JSON.stringify(riftTeamA));
+      sessionStorage.setItem('riftTeamB', JSON.stringify(riftTeamB));
+    },
+    loadTeams() {
+        // Session Storage에서 데이터 복원
+        const storedTeamA = sessionStorage.getItem('riftTeamA');
+        const storedTeamB = sessionStorage.getItem('riftTeamB');
+  
+        this.riftTeamA = storedTeamA ? JSON.parse(storedTeamA) : [];
+        this.riftTeamB = storedTeamB ? JSON.parse(storedTeamB) : [];
+      },
     },    
-    setRiftPlayerRequestDto(data: RiftPlayerRequestDto[]) {
-      this.riftPlayerRequestDto = data;
-      localStorage.setItem('riftPlayerRequestDto', JSON.stringify(data));
-    },
-    getRiftPlayerRequestDto(): RiftPlayerRequestDto[] {
-      return this.riftPlayerRequestDto ?? [];
-    },    
-    // GoBackSwitch 전용
-    setRiftPlayerHisotryRequestDto(data: RiftPlayerHistoryRequestDto) {
-      this.riftPlayerHistoryRequestDto = data;
-      localStorage.setItem('riftPlayerHisotryRequestDto', JSON.stringify(data));
-    },
-    // GoBackSwitch 전용
-    getRiftPlayerHisotryRequestDto(): RiftPlayerHistoryRequestDto | null {
-      return this.riftPlayerHistoryRequestDto;
-    },
-    // Result 전용
-    updateRiftPlayerReulstHisotryRequestDto(data: RiftPlayerResultHistoryRequestDto) {
-      this.riftPlayerResultHistoryRequestDto = data;
-      localStorage.setItem('riftPlayerResultHistoryRequestDto', JSON.stringify(data));
-    },
-    // Result 전용
-    getRiftPlayerResultHistoryRequestDto(): RiftPlayerResultHistoryRequestDto | null {
-      return this.riftPlayerResultHistoryRequestDto;
-    },        
-  }
 });
-// setReqPlayers
