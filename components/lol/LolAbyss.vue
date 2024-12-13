@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
 import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
-import type { Line, LineRole, LolPlayerDto, LolPlayerDto as riftPlayerDto, Tier } from '~/types/game/lol/rift/common';
+import type { LolPlayerDto, LolPlayerDto as riftPlayerDto, Tier } from '~/types/game/lol/rift/common';
 import type { ApiResponse } from '~/types/common';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
-import LolPlayerHistory from './LolPlayerHistory.vue';
 import { useLolStore } from '~/stores/lol/useLolStore';
 
 // Props
@@ -17,68 +16,44 @@ const lolStore = useLolStore();
 const router = useRouter(); 
 const switchStore = useSwitchStore();
 const tiers: Tier[] = getTiers();
-const lines: Line[] = getLines();
 const saveData = ref(false);
 const riftPlayerDto = ref<LolPlayerDto[]>(
-  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],lines: [],mmr: 0, mmrReduced: false, }))
+  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],mmr: 0 }))
 );
 const playerHistoryTitle = ref<string | null>("");
 const riftPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  riftPlayerDtos: riftPlayerDto.value,
-
+  playerDtos: riftPlayerDto.value,
 }));
  
 onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
-  if (switchStore.getRiftGoBackedSwtich() && lolStore.riftInitTeam) {
-    playerHistoryTitle.value = lolStore.riftInitTeam?.playerHistoryTitle
-    riftPlayerDto.value = lolStore.riftInitTeam?.riftPlayerDtos
+  if (switchStore.getAbyssGoBackedSwtich () && lolStore.abyssInitTeam) {
+    playerHistoryTitle.value = lolStore.abyssInitTeam?.playerHistoryTitle
+    riftPlayerDto.value = lolStore.abyssInitTeam?.playerDtos
     return;
   }
   if (props.id) {
-    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
+    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/abyss/playerHistory/detail/${props.id}`,"GET", true);
+    console.log(`콘솔 찍어볼게요 !!! :`)
+    console.log(response)
     playerHistoryTitle.value = response.data.playerHistoryTitle;
-    riftPlayerDto.value = response.data.riftPlayerResponseDtos;
+    riftPlayerDto.value = response.data.playerDtos;
   }
 })
 
-
-
 // 메서드
-
-// 역할 업데이트 함수
-const updatelines = (player: riftPlayerDto, line: Line, type: LineRole): void => {
-  // 기존 라인 찾기
-  const existing = player.lines?.find((l) => l.line === line);
-
-  if (existing) {
-    // 이미 선택된 라인인 경우 역할 변경
-    if (existing.lineRole === type) {
-      existing.lineRole = null; // 선택 해제
-    } else {
-      existing.lineRole = type; // 역할 변경
-    }
-  } else {
-    // 새 라인 추가
-    player.lines?.push({ line, lineRole: type });
-  }
-
-  // lineRole이나 line이 null인 경우 해당 요소 제거
-  player.lines = player.lines?.filter((l) => l.line !== null && l.lineRole !== null);
-};
-
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
   // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
-  lolStore.setInitTeamsWithTitle(riftPlayerHistoryRequestDto.value);
+  lolStore.setInitAbyssTeamsWithTitle(riftPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
-  switchStore.offRiftGoBackedSwitch();
+  switchStore.offAbyssGoBackedSwitch();
   const response = saveData.value   
-  ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true) 
-  : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/rift","POST",false)
-  lolStore.setTeams(response.data.teamA,response.data.teamB);
-  router.push("/game/lol/rift/result")
+  ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/abyss/playerHistory","POST",true) 
+  : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/abyss","POST",false)
+  lolStore.updateAbyssTeams(response.data.teamA,response.data.teamB);
+  router.push("/game/lol/abyss/result")
 };
 
 </script>
@@ -92,7 +67,7 @@ const sendToServer = async () => {
         <!-- 랜덤 데이터 생성 버튼 -->
         <div class="flex justify-center">
           <button 
-            @click="generateRandomData(playerHistoryTitle,riftPlayerDto);"
+            @click="generateRandomDataNoLine(playerHistoryTitle,riftPlayerDto);"
             class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition">
             랜덤 데이터 생성
           </button>
@@ -122,7 +97,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in riftPlayerDto.slice(0, 5)"
+                  v-for="(player, index) in riftPlayerDto.slice(0, riftPlayerDto.length / 2)"
                   :key="index"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -136,34 +111,6 @@ const sendToServer = async () => {
                       <option v-for="tier in tiers" :key="tier" :value="tier">{{ tier }}</option>
                     </select>
                   </div>
-                  <div class="mt-2">
-                    <span class="font-medium text-sm">Lines:</span>
-                    <div class="flex gap-2 mt-2">
-                      <div v-for="line in lines" :key="line" class="flex flex-col items-center">
-                        <span class="font-bold">{{ line }}</span>
-                        <button
-                          class="px-3 py-1 rounded-md text-sm border"
-                          :class="{
-                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
-                            'bg-blue-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE')
-                          }"
-                          @click="updatelines(player, line, 'MAINLINE')"
-                        >
-                          MainLine
-                        </button>
-                        <button
-                          class="px-3 py-1 rounded-md text-sm border"
-                          :class="{
-                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
-                            'bg-green-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE')
-                          }"
-                          @click="updatelines(player, line, 'SUBLINE')"
-                        >
-                          SubLine
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </li>
               </ul>
             </div>
@@ -172,7 +119,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in riftPlayerDto.slice(5, 10)"
+                  v-for="(player, index) in riftPlayerDto.slice(riftPlayerDto.length / 2, riftPlayerDto.length)"
                   :key="index + 5"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -185,34 +132,6 @@ const sendToServer = async () => {
                     <select v-model="player.tier" class="border border-gray-300 rounded-md p-1 bg-white text-sm w-1/3">
                       <option v-for="tier in tiers" :key="tier" :value="tier">{{ tier }}</option>
                     </select>
-                  </div>
-                  <div class="mt-2">
-                    <span class="font-medium text-sm">Lines:</span>
-                    <div class="flex gap-2 mt-2">
-                      <div v-for="line in lines" :key="line" class="flex flex-col items-center">
-                        <span class="font-bold">{{ line }}</span>
-                        <button
-                          class="px-3 py-1 rounded-md text-sm border"
-                          :class="{
-                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE'),
-                            'bg-blue-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'MAINLINE')
-                          }"
-                          @click="updatelines(player, line, 'MAINLINE')"
-                        >
-                          MainLine
-                        </button>
-                        <button
-                          class="px-3 py-1 rounded-md text-sm border"
-                          :class="{
-                            'bg-gray-300 text-black': !player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE'),
-                            'bg-green-500 text-white': player.lines?.find((l) => l.line === line && l.lineRole === 'SUBLINE')
-                          }"
-                          @click="updatelines(player, line, 'SUBLINE')"
-                        >
-                          SubLine
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </li>
               </ul>
@@ -240,11 +159,12 @@ const sendToServer = async () => {
         </div>        
       </div>
       <!-- 팀 히스토리 박스 -->
-      <LolPlayerHistory class="ml-10 whitespace-nowrap" />
+      <LolPlayerHistory class="ml-10 whitespace-nowrap" :domain="'abyss'"/>
     </div>
   </div>
   <LolFooter />
 </template>
+
 
 
 

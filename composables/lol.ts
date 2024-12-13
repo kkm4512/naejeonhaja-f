@@ -1,4 +1,5 @@
-import type { Line, Lines, LolPlayerDto, Tier } from "~/types/game/lol/rift/common";
+import type { Line, Lines, LolPlayerDto, Outcome, Tier } from "~/types/game/lol/rift/common";
+import type { LolPlayerResultHistoryRequestDto } from "~/types/game/lol/rift/req/reqLolDto";
 
 // 라인 약어 변환 함수
 export const getAbbreviatedLine = (line: string | undefined) => {
@@ -49,6 +50,64 @@ export const generateRandomData = (title:string | null, players:LolPlayerDto[]) 
     player.lines = randomlines();
   });
 };
+
+// 랜덤 데이터 생성 함수
+export const generateRandomDataNoLine = (title:string | null, players:LolPlayerDto[]) => {
+  const sampleNicknames:string[] = getSampleNicknames();
+  const tiers: Tier[] = getTiers();
+
+  const usedNicknames = new Set<string>();
+  title = crypto.randomUUID();
+  const randomNickname = () => {
+    let nickname;
+    do {
+      nickname = sampleNicknames[Math.floor(Math.random() * sampleNicknames.length)];
+    } while (usedNicknames.has(nickname));
+    usedNicknames.add(nickname);
+    return nickname;
+  };
+
+  const randomTier = () => tiers[Math.floor(Math.random() * tiers.length)];
+
+  players.forEach((player) => {
+    player.name = randomNickname();
+    player.tier = randomTier();
+  });
+};
+
+export const getOutcomeClass = (outcome: Outcome) => {
+  const baseClass =  'absolute -top-4 left-1/2 transform -translate-x-1/2 -translate-y-0 text-sm font-bold py-1 px-4 rounded-full shadow-md';
+
+  if (outcome === 'WINNER')
+    return { text: 'Winner', class: `${baseClass} bg-yellow-300 text-yellow-800` };
+  if (outcome === 'LOSE')
+    return { text: 'Lose', class: `${baseClass} bg-gray-300 text-gray-800` };
+  if (outcome === 'DRAW')
+    return { text: 'Draw', class: `${baseClass} bg-gray-200 text-gray-700` };
+  return { text: '', class: '' }; // 기본값 (표시 안 함)
+};
+
+
+// 팀과 결과 상태에 따라 배경 클래스를 반환
+export const getTeamBackgroundClass = (outcome: Outcome, team: 'TeamA' | 'TeamB') => {
+  const baseColor = team === 'TeamA' ? 'blue' : 'red'; // A팀은 파랑, B팀은 빨강
+
+  if (outcome === 'WINNER') return `bg-${baseColor}-300 opacity-100`; // 승리한 경우 (가장 밝게)
+  if (outcome === 'LOSE') return `bg-gray-200 opacity-60`;            // 패배한 경우 (회색빛)
+  if (outcome === 'DRAW') return `bg-${baseColor}-200 opacity-80`;    // 무승부인 경우 (중간 밝기)
+  return `bg-${baseColor}-200 opacity-85`;                            // 기본값 (조금 더 밝게)
+};
+
+
+
+
+
+
+
+
+
+  
+
 
 // 티어 그룹별 색상 매핑 함수
 export const getTierGroupClass = (tier: string) => {

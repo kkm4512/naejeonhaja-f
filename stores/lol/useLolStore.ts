@@ -4,32 +4,74 @@ import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/rift/req/reqLo
 
 export const useLolStore = defineStore('lol', {
   state: () => ({
+    // Rift
     riftTeamA: [] as LolPlayerDto[],
     riftTeamB: [] as LolPlayerDto[],
     riftInitTeam: null as LolPlayerHistoryRequestDto | null,
+
+    // Abyss
+    abyssTeamA: [] as LolPlayerDto[],
+    abyssTeamB: [] as LolPlayerDto[],
+    abyssInitTeam: null as LolPlayerHistoryRequestDto | null,
+
+    // TFT
+    tftTeamA: [] as LolPlayerDto[],
+    tftTeamB: [] as LolPlayerDto[],
+    tftInitTeam: null as LolPlayerHistoryRequestDto | null,
   }),
   actions: {
-    setInitTeamsWithTitle(riftInitTeam: LolPlayerHistoryRequestDto) {
+    // Rift
+    setInitRiftTeamsWithTitle(riftInitTeam: LolPlayerHistoryRequestDto) {
       this.riftInitTeam = riftInitTeam;
-
-      // 데이터 저장
       sessionStorage.setItem('riftInitTeam', JSON.stringify(riftInitTeam));
     },
-    setTeams(riftTeamA: LolPlayerDto[], riftTeamB: LolPlayerDto[]) {
+    updateRiftTeams(riftTeamA: LolPlayerDto[], riftTeamB: LolPlayerDto[]) {
       this.riftTeamA = riftTeamA;
       this.riftTeamB = riftTeamB;
-
-      // 데이터 저장
       sessionStorage.setItem('riftTeamA', JSON.stringify(riftTeamA));
       sessionStorage.setItem('riftTeamB', JSON.stringify(riftTeamB));
     },
-    loadTeams() {
-        // Session Storage에서 데이터 복원
-        const storedTeamA = sessionStorage.getItem('riftTeamA');
-        const storedTeamB = sessionStorage.getItem('riftTeamB');
-  
-        this.riftTeamA = storedTeamA ? JSON.parse(storedTeamA) : [];
-        this.riftTeamB = storedTeamB ? JSON.parse(storedTeamB) : [];
-      },
-    },    
+    loadRiftTeams() {
+      const storedTeamA = sessionStorage.getItem('riftTeamA');
+      const storedTeamB = sessionStorage.getItem('riftTeamB');
+      this.riftTeamA = storedTeamA ? JSON.parse(storedTeamA) : [];
+      this.riftTeamB = storedTeamB ? JSON.parse(storedTeamB) : [];
+    },
+
+    // Abyss
+    setInitAbyssTeamsWithTitle(abyssInitTeam: LolPlayerHistoryRequestDto) {
+      this.abyssInitTeam = abyssInitTeam;
+      sessionStorage.setItem('abyssInitTeam', JSON.stringify(abyssInitTeam));
+    },
+    updateAbyssTeams(abyssTeamA: LolPlayerDto[], abyssTeamB: LolPlayerDto[]) {
+      this.abyssTeamA = abyssTeamA;
+      this.abyssTeamB = abyssTeamB;
+      sessionStorage.setItem('abyssTeamA', JSON.stringify(abyssTeamA));
+      sessionStorage.setItem('abyssTeamB', JSON.stringify(abyssTeamB));
+    },
+    loadAbyssTeams() {
+      const storedAbyssTeamA = sessionStorage.getItem('abyssTeamA');
+      const storedAbyssTeamB = sessionStorage.getItem('abyssTeamB');
+      this.abyssTeamA = storedAbyssTeamA ? JSON.parse(storedAbyssTeamA) : [];
+      this.abyssTeamB = storedAbyssTeamB ? JSON.parse(storedAbyssTeamB) : [];
+    },
+
+    // TFT
+    setInitTftTeamsWithTitle(tftInitTeam: LolPlayerHistoryRequestDto) {
+      this.tftInitTeam = tftInitTeam;
+      sessionStorage.setItem('tftInitTeam', JSON.stringify(tftInitTeam));
+    },
+    updateTftTeams(tftTeamA: LolPlayerDto[], tftTeamB: LolPlayerDto[]) {
+      this.tftTeamA = tftTeamA;
+      this.tftTeamB = tftTeamB;
+      sessionStorage.setItem('tftTeamA', JSON.stringify(tftTeamA));
+      sessionStorage.setItem('tftTeamB', JSON.stringify(tftTeamB));
+    },
+    loadTftTeams() {
+      const storedTftTeamA = sessionStorage.getItem('tftTeamA');
+      const storedTftTeamB = sessionStorage.getItem('tftTeamB');
+      this.tftTeamA = storedTftTeamA ? JSON.parse(storedTftTeamA) : [];
+      this.tftTeamB = storedTftTeamB ? JSON.parse(storedTftTeamB) : [];
+    },
+  },
 });
