@@ -37,6 +37,14 @@ export const useLolStore = defineStore('lol', {
       this.riftTeamA = storedTeamA ? JSON.parse(storedTeamA) : [];
       this.riftTeamB = storedTeamB ? JSON.parse(storedTeamB) : [];
     },
+    loadInitRiftTeamsWithTitle() {
+      const storedRiftInitTeam = sessionStorage.getItem('riftInitTeam');
+      if (storedRiftInitTeam) {
+        this.riftInitTeam = JSON.parse(storedRiftInitTeam);
+      } else {
+        this.riftInitTeam = null; // 초기 상태를 null 또는 빈 값으로 설정
+      }
+    },    
 
     // Abyss
     setInitAbyssTeamsWithTitle(abyssInitTeam: LolPlayerHistoryRequestDto) {
@@ -55,6 +63,14 @@ export const useLolStore = defineStore('lol', {
       this.abyssTeamA = storedAbyssTeamA ? JSON.parse(storedAbyssTeamA) : [];
       this.abyssTeamB = storedAbyssTeamB ? JSON.parse(storedAbyssTeamB) : [];
     },
+    loadInitAbyssTeamsWithTitle() {
+      const storedAbyssInitTeam = sessionStorage.getItem('abyssInitTeam');
+      if (storedAbyssInitTeam) {
+        this.abyssInitTeam = JSON.parse(storedAbyssInitTeam);
+      } else {
+        this.abyssInitTeam = null; // 초기 상태를 null 또는 빈 값으로 설정
+      }
+    },        
 
     // TFT
     setInitTftTeamsWithTitle(tftInitTeam: LolPlayerHistoryRequestDto) {
@@ -73,5 +89,13 @@ export const useLolStore = defineStore('lol', {
       this.tftTeamA = storedTftTeamA ? JSON.parse(storedTftTeamA) : [];
       this.tftTeamB = storedTftTeamB ? JSON.parse(storedTftTeamB) : [];
     },
+    loadInitTftTeamsWithTitle() {
+      const storedTftInitTeam = sessionStorage.getItem('tftInitTeam');
+      if (storedTftInitTeam) {
+        this.tftInitTeam = JSON.parse(storedTftInitTeam);
+      } else {
+        this.tftInitTeam = null; // 초기 상태를 null 또는 빈 값으로 설정
+      }
+    },           
   },
 });

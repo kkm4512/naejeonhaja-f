@@ -171,12 +171,13 @@
   import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
-  import type { LolPlayerDto, LolTeamResultDto, Outcome } from '~/types/game/lol/rift/common';
+  import type { LolTeamResultDto } from '~/types/game/lol/rift/common';
   import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
  onMounted(() => {
-   lolStore.loadRiftTeams(); // Session Storage에서 데이터 복원
+   lolStore.loadRiftTeams(); 
+   lolStore.loadInitRiftTeamsWithTitle()
 });
 
   // 데이터
@@ -203,10 +204,11 @@
   })
   
   const riftPlayerResultHistoryRequestDto: Ref<LolPlayerResultHistoryRequestDto> = computed(() => ({
-    playerResultHistoryTitle: playerResultHistoryTitle.value,
-    teamA: riftTeamResultRequestDtoA.value,
-    teamB: riftTeamResultRequestDtoB.value
-  }));
+  playerResultHistoryTitle: playerResultHistoryTitle.value,
+  teamA: riftTeamResultRequestDtoA.value,
+  teamB: riftTeamResultRequestDtoB.value,
+  })
+)
   
   // 메서드
   const declareWinner = (team: string) => {
@@ -234,8 +236,11 @@
   // 팀 다시 구성하기 메서드 - 임시
   const recomposeTeam = async () => {
     try {
+      console.log(lolStore.riftInitTeam)
       const response = await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolStore.riftInitTeam, "/game/lol/rift", "POST");
       lolStore.updateRiftTeams(response.data.teamA,response.data.teamB);
+      riftPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
+      riftPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
     } catch (error) {
       alert("팀을 다시 구성하는 데 실패했습니다.");
     }
