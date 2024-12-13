@@ -2,7 +2,7 @@ import type { LolPlayerDto, LolTeamResultDto } from "../common";
 
 export type LolPlayerHistoryRequestDto = {
   playerHistoryTitle: string | null; 
-  riftPlayerDtos: LolPlayerDto[] | []; 
+  playerDtos: LolPlayerDto[] | []; 
 };
 
 export type LolPlayerResultHistoryRequestDto = {

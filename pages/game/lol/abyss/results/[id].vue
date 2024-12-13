@@ -8,6 +8,7 @@ const id = route.params.id;
 
 // 대전결과 상세 정보 가져오기
 const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDetailDto>>(null,`/game/lol/rift/playerResultHistory/detail/${id}`,"GET",true)
+
 </script>
 
 <template>
@@ -64,24 +65,6 @@ const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDet
             >
               <span class="text-sm font-bold text-blue-900">{{ player.name }}</span>
               <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-              <div class="flex gap-2 items-center">
-                <div
-                  class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                  style="max-width: 80px;"
-                >
-                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                </div>
-                <div
-                  :class="[
-                    'px-3 py-1 text-xs font-semibold rounded',
-                    player.mmrReduced
-                      ? 'bg-gray-300 text-gray-800'
-                      : 'bg-blue-300 text-blue-900'
-                  ]"
-                >
-                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                </div>
-              </div>
             </li>
           </ul>
         </div>
@@ -105,24 +88,6 @@ const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDet
             >
               <span class="text-sm font-bold text-red-900">{{ player.name }}</span>
               <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-              <div class="flex gap-2 items-center">
-                <div
-                  class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                  style="max-width: 80px;"
-                >
-                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                </div>
-                <div
-                  :class="[
-                    'px-3 py-1 text-xs font-semibold rounded',
-                    player.mmrReduced
-                      ? 'bg-gray-300 text-gray-800'
-                      : 'bg-red-300 text-red-900'
-                  ]"
-                >
-                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                </div>
-              </div>
             </li>
           </ul>
         </div>

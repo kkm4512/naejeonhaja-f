@@ -1,6 +1,6 @@
 <template>
     <div class="p-4 bg-gray-100 min-h-screen flex flex-col items-center">
-      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">소환사의 협곡 대전결과들</h1>
+      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">칼바람의 나락 대전결과들</h1>
       <div class="w-full max-w-4xl space-y-4">
         <!-- 카드 리스트 -->
         <div
@@ -9,7 +9,7 @@
             class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300 cursor-pointer border border-gray-200 flex items-center justify-center"
         >
             <a
-            :href="`/game/lol/rift/results/${history.playerResultHistoryId}`"
+            :href="`/game/lol/abyss/results/${history.playerResultHistoryId}`"
             class="block w-full text-lg font-semibold text-gray-700 text-center"
             >
             {{ history.playerResultHistoryTitle }}
@@ -62,7 +62,7 @@
       </div>
     </div>
     <LolFooter />
-  </template>
+  </template> 
     
   <script setup lang="ts">
   import type { ApiResponse, Page } from "~/types/common";
@@ -75,7 +75,7 @@ import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/r
   
   // 데이터 가져오기 함수
   const fetchPlayerHistories = async() => {
-      const response = await uFetch<null,ApiResponse<Page<LolPlayerResultHistoryResponseSimpleDto>>>(null, `/game/lol/rift/playerResultHistory/simple/${currentPage.value}`, "GET", true);
+      const response = await uFetch<null,ApiResponse<Page<LolPlayerResultHistoryResponseSimpleDto>>>(null, `/game/lol/abyss/playerResultHistory/simple/${currentPage.value}`, "GET", true);
       if (response?.data) {
         playerHistories.value = response.data.content
         totalPages.value = response.data.page.totalPages

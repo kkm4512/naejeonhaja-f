@@ -38,28 +38,14 @@
           <!-- Team A -->
           <div
             class="relative p-6 rounded-xl shadow-lg transition"
-            :class="winner === 'TeamB' ? 'bg-blue-200 opacity-80' : winner === 'Draw' ? 'bg-blue-100' : 'bg-blue-50'"
+            :class="getTeamBackgroundClass(riftPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
           >
             <!-- Winner/Lose/Draw 표시 -->
             <div
-              v-if="winner === 'TeamA'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-yellow-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
+              :class="getOutcomeClass(riftPlayerResultHistoryRequestDto.teamA.outcome).class"
             >
-              Winner
+              {{ getOutcomeClass(riftPlayerResultHistoryRequestDto.teamA.outcome).text }}
             </div>
-            <div
-              v-if="winner === 'TeamB'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-300 text-gray-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
-            >
-              Lose
-            </div>
-            <div
-              v-if="winner === 'Draw'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-200 text-gray-700 text-sm font-bold py-1 px-4 rounded-full shadow-md"
-            >
-              Draw
-            </div>
-            <h2 class="text-xl font-bold text-blue-700 mb-4">Team A</h2>
             <ul class="space-y-3">
               <li
                 v-for="(player, index) in riftTeamResponseDto.teamA"
@@ -100,28 +86,14 @@
           <!-- Team B -->
           <div
             class="relative p-6 rounded-xl shadow-lg transition"
-            :class="winner === 'TeamA' ? 'bg-red-200 opacity-80' : winner === 'Draw' ? 'bg-red-100' : 'bg-red-50'"
+            :class="getTeamBackgroundClass(riftPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
           >
             <!-- Winner/Lose/Draw 표시 -->
             <div
-              v-if="winner === 'TeamB'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-yellow-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
+              :class="getOutcomeClass(riftPlayerResultHistoryRequestDto.teamB.outcome).class"
             >
-              Winner
+              {{ getOutcomeClass(riftPlayerResultHistoryRequestDto.teamB.outcome).text }}
             </div>
-            <div
-              v-if="winner === 'TeamA'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-300 text-gray-800 text-sm font-bold py-1 px-4 rounded-full shadow-md"
-            >
-              Lose
-            </div>
-            <div
-              v-if="winner === 'Draw'"
-              class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-200 text-gray-700 text-sm font-bold py-1 px-4 rounded-full shadow-md"
-            >
-              Draw
-            </div>
-            <h2 class="text-xl font-bold text-red-700 mb-4">Team B</h2>
             <ul class="space-y-3">
               <li
                 v-for="(player, index) in riftTeamResponseDto.teamB"
@@ -199,12 +171,12 @@
   import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
-  import type { LolPlayerDto, LolTeamResultDto } from '~/types/game/lol/rift/common';
-  import type { LolPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
+  import type { LolPlayerDto, LolTeamResultDto, Outcome } from '~/types/game/lol/rift/common';
+  import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
  onMounted(() => {
-   lolStore.loadTeams(); // Session Storage에서 데이터 복원
+   lolStore.loadRiftTeams(); // Session Storage에서 데이터 복원
 });
 
   // 데이터
@@ -251,7 +223,8 @@
       riftPlayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
     }
   };
-  
+
+
   // 이전으로 버튼 메서드
   const goBack = () => {
     switchStore.onRiftGoBackedSwitch();
@@ -260,13 +233,9 @@
   
   // 팀 다시 구성하기 메서드 - 임시
   const recomposeTeam = async () => {
-    const combinedPlayerList: LolPlayerDto[] = [
-      ...riftTeamResponseDto.value.teamA,
-      ...riftTeamResponseDto.value.teamB
-    ];
     try {
-      const response = await uFetch<LolPlayerDto[],ApiResponse<LolTeamResponseDto>>(combinedPlayerList, "/game/lol/rift", "POST");
-      lolStore.setTeams(response.data.teamA,response.data.teamB);
+      const response = await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolStore.riftInitTeam, "/game/lol/rift", "POST");
+      lolStore.updateRiftTeams(response.data.teamA,response.data.teamB);
     } catch (error) {
       alert("팀을 다시 구성하는 데 실패했습니다.");
     }
