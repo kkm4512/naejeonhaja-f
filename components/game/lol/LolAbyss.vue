@@ -6,6 +6,7 @@ import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 import { useLolStore } from '~/stores/lol/useLolStore';
 import type { LolPlayerDto, Tier } from '~/types/game/lol/common';
 import LolPlayerHistory from './LolPlayerHistory.vue';
+import LolFooter from './LolFooter.vue';
 
 // Props
 const props = defineProps<{
@@ -24,20 +25,24 @@ const lolPlayerDto = ref<LolPlayerDto[]>(
 const playerHistoryTitle = ref<string | null>("");
 const lolPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  playerDtos: lolPlayerDto.value,
+  lolPlayerDtos: lolPlayerDto.value,
 }));
  
 onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
   if (switchStore.getAbyssGoBackedSwtich () && lolStore.abyssInitTeam) {
     playerHistoryTitle.value = lolStore.abyssInitTeam?.playerHistoryTitle
-    lolPlayerDto.value = lolStore.abyssInitTeam?.playerDtos
+    lolPlayerDto.value = lolStore.abyssInitTeam?.lolPlayerDtos
     return;
   }
   if (props.id) {
     const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/abyss/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
-    lolPlayerDto.value = response.data.playerDtos;
+    lolPlayerDto.value = response.data.playerDtos.map(p => ({
+      ...p,
+      mmrReduced: false,
+      mmr: 0,
+    }))
   }
 })
 

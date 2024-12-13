@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { LolPlayerDto } from "~/types/game/lol/rift/common";
+import type { LolPlayerDto } from '~/types/game/lol/common';
 import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
 
 export const useLolStore = defineStore('lol', {

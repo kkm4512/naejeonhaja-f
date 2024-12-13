@@ -137,7 +137,7 @@
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
 import type { LolTeamResultDto } from '~/types/game/lol/common';
-  import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
+import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
 
  onMounted(() => {

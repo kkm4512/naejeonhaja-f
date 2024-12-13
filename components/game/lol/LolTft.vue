@@ -25,20 +25,24 @@ const lolPlayerDto = ref<LolPlayerDto[]>(
 const playerHistoryTitle = ref<string | null>("");
 const lolPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  playerDtos: lolPlayerDto.value,
+  lolPlayerDtos: lolPlayerDto.value,
 }));
  
 onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
   if (switchStore.getTftGoBackedSwtich () && lolStore.tftInitTeam) {
     playerHistoryTitle.value = lolStore.tftInitTeam?.playerHistoryTitle
-    lolPlayerDto.value = lolStore.tftInitTeam?.playerDtos
+    lolPlayerDto.value = lolStore.tftInitTeam?.lolPlayerDtos
     return;
   }
   if (props.id) {
     const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/tft/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
-    lolPlayerDto.value = response.data.playerDtos;
+    lolPlayerDto.value = response.data.playerDtos.map(p => ({
+      ...p,
+      mmrReduced: false,
+      mmr: 0,
+    }))
   }
 })
 
