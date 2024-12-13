@@ -136,12 +136,13 @@
   import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
-  import type { LolPlayerDto, LolTeamResultDto } from '~/types/game/lol/rift/common';
+  import type { LolTeamResultDto } from '~/types/game/lol/rift/common';
   import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
 
  onMounted(() => {
-   lolStore.loadAbyssTeams(); // Session Storage에서 데이터 복원
+   lolStore.loadAbyssTeams();
+   lolStore.loadInitAbyssTeamsWithTitle()
 });
 
   // 데이터
@@ -201,6 +202,8 @@
     try {
       const response = await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolStore.abyssInitTeam, "/game/lol/abyss", "POST");
       lolStore.updateAbyssTeams(response.data.teamA,response.data.teamB);
+      riftPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
+      riftPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
     } catch (error) {
       alert("팀을 다시 구성하는 데 실패했습니다.");
     }
