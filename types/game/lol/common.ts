@@ -26,7 +26,7 @@ export type Tier =
     tier: Tier;
     lines?: Lines[] | null;
     mmr: number;
-    mmrReduced?: boolean | null;
+    mmrReduced?: boolean;
   };
 
   export type LolTeamResultDto = {

@@ -26,7 +26,7 @@ const lolPlayerDto = ref<LolPlayerDto[]>(
 const playerHistoryTitle = ref<string | null>("");
 const lolPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  playerDtos: lolPlayerDto.value,
+  lolPlayerDtos: lolPlayerDto.value,
 
 }));
  
@@ -34,13 +34,17 @@ onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
   if (switchStore.getRiftGoBackedSwtich() && lolStore.riftInitTeam) {
     playerHistoryTitle.value = lolStore.riftInitTeam?.playerHistoryTitle
-    lolPlayerDto.value = lolStore.riftInitTeam?.playerDtos
+    lolPlayerDto.value = lolStore.riftInitTeam?.lolPlayerDtos
     return;
   }
   if (props.id) {
     const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
-    lolPlayerDto.value = response.data.playerDtos;
+    lolPlayerDto.value = response.data.playerDtos.map(p => ({
+      ...p,
+      mmrReduced: false,
+      mmr: 0,
+    }))
   }
 })
 
@@ -75,6 +79,7 @@ const sendToServer = async () => {
   lolStore.setInitRiftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
   switchStore.offRiftGoBackedSwitch();
+  console.log(lolPlayerHistoryRequestDto.value)
   const response = saveData.value   
   ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true) 
   : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift","POST",false)

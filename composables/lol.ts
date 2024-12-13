@@ -1,5 +1,4 @@
-import type { Line, Lines, LolPlayerDto, Outcome, Tier } from "~/types/game/lol/rift/common";
-import type { LolPlayerResultHistoryRequestDto } from "~/types/game/lol/req/reqLolDto";
+import type { Line, Lines, LolPlayerDto, Outcome, Tier } from "~/types/game/lol/common";
 
 // 라인 약어 변환 함수
 export const getAbbreviatedLine = (line: string | undefined) => {
