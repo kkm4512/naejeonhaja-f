@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
-import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
-import type { LolPlayerDto, LolPlayerDto as riftPlayerDto, Tier } from '~/types/game/lol/rift/common';
+import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
+import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
 import type { ApiResponse } from '~/types/common';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 import { useLolStore } from '~/stores/lol/useLolStore';
+import type { LolPlayerDto, Tier } from '~/types/game/lol/common';
+import LolFooter from './LolFooter.vue';
+import LolPlayerHistory from './LolPlayerHistory.vue';
 
 // Props
 const props = defineProps<{
@@ -17,28 +19,26 @@ const router = useRouter();
 const switchStore = useSwitchStore();
 const tiers: Tier[] = getTiers();
 const saveData = ref(false);
-const riftPlayerDto = ref<LolPlayerDto[]>(
-  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],mmr: 0 }))
+const lolPlayerDto = ref<LolPlayerDto[]>(
+  Array.from({ length: 8 }, () => ({name: "",tier: tiers[0],mmr: 0 }))
 );
 const playerHistoryTitle = ref<string | null>("");
-const riftPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
+const lolPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
-  playerDtos: riftPlayerDto.value,
+  playerDtos: lolPlayerDto.value,
 }));
  
 onMounted(async() => {
   // true라면 사용자가 goBack을 눌렀다는 뜻
-  if (switchStore.getAbyssGoBackedSwtich () && lolStore.abyssInitTeam) {
-    playerHistoryTitle.value = lolStore.abyssInitTeam?.playerHistoryTitle
-    riftPlayerDto.value = lolStore.abyssInitTeam?.playerDtos
+  if (switchStore.getTftGoBackedSwtich () && lolStore.tftInitTeam) {
+    playerHistoryTitle.value = lolStore.tftInitTeam?.playerHistoryTitle
+    lolPlayerDto.value = lolStore.tftInitTeam?.playerDtos
     return;
   }
   if (props.id) {
-    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/abyss/playerHistory/detail/${props.id}`,"GET", true);
-    console.log(`콘솔 찍어볼게요 !!! :`)
-    console.log(response)
+    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/tft/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
-    riftPlayerDto.value = response.data.playerDtos;
+    lolPlayerDto.value = response.data.playerDtos;
   }
 })
 
@@ -46,14 +46,14 @@ onMounted(async() => {
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
   // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
-  lolStore.setInitAbyssTeamsWithTitle(riftPlayerHistoryRequestDto.value);
+  lolStore.setInitTftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
-  switchStore.offAbyssGoBackedSwitch();
+  switchStore.offTftGoBackedSwitch();
   const response = saveData.value   
-  ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/abyss/playerHistory","POST",true) 
-  : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(riftPlayerHistoryRequestDto.value, "/game/lol/abyss","POST",false)
-  lolStore.updateAbyssTeams(response.data.teamA,response.data.teamB);
-  router.push("/game/lol/abyss/result")
+  ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/tft/playerHistory","POST",true) 
+  : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/tft","POST",false)
+  lolStore.updateTftTeams(response.data.teamA,response.data.teamB);
+  router.push("/game/lol/tft/result")
 };
 
 </script>
@@ -63,11 +63,11 @@ const sendToServer = async () => {
     <div class="flex w-full max-w-7xl">
       <!-- 소환사의 협곡 메인 콘텐츠 -->
       <div class="flex-1 bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">소환사의 협곡</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">롤토체스</h1>
         <!-- 랜덤 데이터 생성 버튼 -->
         <div class="flex justify-center">
           <button 
-            @click="generateRandomDataNoLine(playerHistoryTitle,riftPlayerDto);"
+            @click="generateRandomDataNoLine(playerHistoryTitle,lolPlayerDto);"
             class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition">
             랜덤 데이터 생성
           </button>
@@ -97,7 +97,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in riftPlayerDto.slice(0, riftPlayerDto.length / 2)"
+                  v-for="(player, index) in lolPlayerDto.slice(0, lolPlayerDto.length / 2)"
                   :key="index"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -119,7 +119,7 @@ const sendToServer = async () => {
             <div class="w-1/2 px-4">
               <ul class="space-y-4">
                 <li
-                  v-for="(player, index) in riftPlayerDto.slice(riftPlayerDto.length / 2, riftPlayerDto.length)"
+                  v-for="(player, index) in lolPlayerDto.slice(lolPlayerDto.length / 2, lolPlayerDto.length)"
                   :key="index + 5"
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
@@ -159,7 +159,7 @@ const sendToServer = async () => {
         </div>        
       </div>
       <!-- 팀 히스토리 박스 -->
-      <LolPlayerHistory class="ml-10 whitespace-nowrap" :domain="'abyss'"/>
+      <LolPlayerHistory class="ml-10 whitespace-nowrap" :domain="'tft'"/>
     </div>
   </div>
   <LolFooter />

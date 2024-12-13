@@ -65,7 +65,8 @@
   </template> 
     
   <script setup lang="ts">
-  import type { ApiResponse, Page } from "~/types/common";
+  import LolFooter from "~/components/game/lol/LolFooter.vue";
+import type { ApiResponse, Page } from "~/types/common";
 import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/res/resLolDto";
   
   // 데이터 상태 정의

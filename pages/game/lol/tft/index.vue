@@ -1,9 +1,10 @@
 <script lang="ts" setup>
+import LolTft from '~/components/game/lol/LolTft.vue';
 
 </script>
 
 <template>
-    TFT
+    <LolTft />
 </template>
 
 <style lang="postcss" scoped>

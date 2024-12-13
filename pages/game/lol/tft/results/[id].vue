@@ -8,7 +8,7 @@ const route = useRoute();
 const id = route.params.id;
 
 // 대전결과 상세 정보 가져오기
-const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDetailDto>>(null,`/game/lol/abyss/playerResultHistory/detail/${id}`,"GET",true)
+const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDetailDto>>(null,`/game/lol/tft/playerResultHistory/detail/${id}`,"GET",true)
 
 </script>
 

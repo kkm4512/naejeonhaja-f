@@ -21,14 +21,14 @@
           <div class="flex flex-col items-center">
             <span class="text-3xl font-bold text-blue-700">Team A</span>
             <span class="text-lg font-semibold text-blue-800">
-              Total MMR: {{ calculateTotalMMR(riftTeamResponseDto.teamA || []) }}
+              Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamA || []) }}
             </span>
           </div>
           <span class="text-2xl font-extrabold text-gray-600">VS</span>
           <div class="flex flex-col items-center">
             <span class="text-3xl font-bold text-red-700">Team B</span>
             <span class="text-lg font-semibold text-red-800">
-              Total MMR: {{ calculateTotalMMR(riftTeamResponseDto.teamB || []) }}
+              Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamB || []) }}
             </span>
           </div>
         </div>
@@ -38,17 +38,17 @@
           <!-- Team A -->
           <div
             class="relative p-6 rounded-xl shadow-lg transition"
-            :class="getTeamBackgroundClass(riftPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
+            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
           >
             <!-- Winner/Lose/Draw 표시 -->
             <div
-              :class="getOutcomeClass(riftPlayerResultHistoryRequestDto.teamA.outcome).class"
+              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).class"
             >
-              {{ getOutcomeClass(riftPlayerResultHistoryRequestDto.teamA.outcome).text }}
+              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).text }}
             </div>
             <ul class="space-y-3">
               <li
-                v-for="(player, index) in riftTeamResponseDto.teamA"
+                v-for="(player, index) in lolTeamResponseDto.teamA"
                 :key="index"
                 :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
               >
@@ -86,17 +86,17 @@
           <!-- Team B -->
           <div
             class="relative p-6 rounded-xl shadow-lg transition"
-            :class="getTeamBackgroundClass(riftPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
+            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
           >
             <!-- Winner/Lose/Draw 표시 -->
             <div
-              :class="getOutcomeClass(riftPlayerResultHistoryRequestDto.teamB.outcome).class"
+              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).class"
             >
-              {{ getOutcomeClass(riftPlayerResultHistoryRequestDto.teamB.outcome).text }}
+              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).text }}
             </div>
             <ul class="space-y-3">
               <li
-                v-for="(player, index) in riftTeamResponseDto.teamB"
+                v-for="(player, index) in lolTeamResponseDto.teamB"
                 :key="index"
                 :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
               >
@@ -165,15 +165,17 @@
         </div>
       </div>
     </div>
+    <LolFooter />
   </template>
     
   <script setup lang="ts">
-  import { useLolStore } from '~/stores/lol/useLolStore';
+  import LolFooter from '~/components/game/lol/LolFooter.vue';
+import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
-  import type { LolTeamResultDto } from '~/types/game/lol/rift/common';
-  import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/rift/req/reqLolDto';
-  import type { LolTeamResponseDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { LolTeamResultDto } from '~/types/game/lol/common';
+  import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
+  import type { LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
 
  onMounted(() => {
    lolStore.loadRiftTeams(); 
@@ -186,27 +188,27 @@
   const switchStore = useSwitchStore();
   const playerResultHistoryTitle = ref<string>("");
 
-  const riftTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
+  const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
     teamB: lolStore.riftTeamB,
   })
 )
   
   // PlayerResultHistory
-  const riftTeamResultRequestDtoA: Ref<LolTeamResultDto> = ref({
+  const lolTeamResultRequestDtoA: Ref<LolTeamResultDto> = ref({
     outcome: null,
-    team: riftTeamResponseDto.value.teamA
+    team: lolTeamResponseDto.value.teamA
   })
   
-  const riftTeamResultRequestDtoB: Ref<LolTeamResultDto> = ref({
+  const lolTeamResultRequestDtoB: Ref<LolTeamResultDto> = ref({
     outcome: null,
-    team: riftTeamResponseDto.value.teamB
+    team: lolTeamResponseDto.value.teamB
   })
   
-  const riftPlayerResultHistoryRequestDto: Ref<LolPlayerResultHistoryRequestDto> = computed(() => ({
+  const lolPlayerResultHistoryRequestDto: Ref<LolPlayerResultHistoryRequestDto> = computed(() => ({
   playerResultHistoryTitle: playerResultHistoryTitle.value,
-  teamA: riftTeamResultRequestDtoA.value,
-  teamB: riftTeamResultRequestDtoB.value,
+  teamA: lolTeamResultRequestDtoA.value,
+  teamB: lolTeamResultRequestDtoB.value,
   })
 )
   
@@ -215,14 +217,14 @@
     winner.value = team; // 승리한 팀 설정
     
     if (team === 'TeamA') {
-      riftPlayerResultHistoryRequestDto.value.teamA.outcome = "WINNER"
-      riftPlayerResultHistoryRequestDto.value.teamB.outcome = "LOSE";
+      lolPlayerResultHistoryRequestDto.value.teamA.outcome = "WINNER"
+      lolPlayerResultHistoryRequestDto.value.teamB.outcome = "LOSE";
     } else if (team === 'TeamB') {
-      riftPlayerResultHistoryRequestDto.value.teamA.outcome = "LOSE";
-      riftPlayerResultHistoryRequestDto.value.teamB.outcome = "WINNER";
+      lolPlayerResultHistoryRequestDto.value.teamA.outcome = "LOSE";
+      lolPlayerResultHistoryRequestDto.value.teamB.outcome = "WINNER";
     } else if (team === 'Draw') {
-      riftPlayerResultHistoryRequestDto.value.teamA.outcome = "DRAW";
-      riftPlayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
+      lolPlayerResultHistoryRequestDto.value.teamA.outcome = "DRAW";
+      lolPlayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
     }
   };
 
@@ -236,11 +238,10 @@
   // 팀 다시 구성하기 메서드 - 임시
   const recomposeTeam = async () => {
     try {
-      console.log(lolStore.riftInitTeam)
       const response = await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolStore.riftInitTeam, "/game/lol/rift", "POST");
       lolStore.updateRiftTeams(response.data.teamA,response.data.teamB);
-      riftPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
-      riftPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
+      lolPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
+      lolPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
     } catch (error) {
       alert("팀을 다시 구성하는 데 실패했습니다.");
     }
@@ -248,7 +249,7 @@
   
   // 저장 버튼 메서드
   const saveTeam = async() => {
-    const response = await uFetch<LolPlayerResultHistoryRequestDto,ApiResponse<null>>(riftPlayerResultHistoryRequestDto.value,"/game/lol/rift/playerResultHistory","POST",true);
+    const response = await uFetch<LolPlayerResultHistoryRequestDto,ApiResponse<null>>(lolPlayerResultHistoryRequestDto.value,"/game/lol/rift/playerResultHistory","POST",true);
     if (response.code === 200) {
       alert("저장에 성공 하였습니다 !")
     }

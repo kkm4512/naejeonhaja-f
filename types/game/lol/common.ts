@@ -33,4 +33,3 @@ export type Tier =
     outcome: Outcome;
     team: LolPlayerDto[];
   }
-

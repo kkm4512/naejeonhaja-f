@@ -13,7 +13,7 @@ const isHistoryVisible = ref(false);
 const rawDomain = cleanDomain(props.domain);
 
 // 히스토리 데이터 및 페이지 관리
-const riftPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
+const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
 const currentPage = ref(1); // 현재 페이지
 const totalPages = ref(0); // 총 페이지 수
 
@@ -31,13 +31,12 @@ const togglePlayerHistory = async () => {
 
 // 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
-  console.log(`/game/lol/${rawDomain}/playerHistory/simple/${page}`)
   const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(null,`/game/lol/${rawDomain}/playerHistory/simple/${page}`,'GET', true);
   if (response && response.data) {
-    riftPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
+    lolPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
     totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
   } else {
-    riftPlayerHistoryResponseSimpleDtos.value = []; // 데이터가 없으면 빈 배열
+    lolPlayerHistoryResponseSimpleDtos.value = []; // 데이터가 없으면 빈 배열
     totalPages.value = 0;
   }
 };
@@ -84,10 +83,10 @@ const changePage = async (page: number) => {
         <h3 class="text-lg font-bold mb-3">📜 팀 히스토리</h3>
 
         <!-- 히스토리 유무에 따라 다른 메시지 표시 -->
-        <template v-if="riftPlayerHistoryResponseSimpleDtos.length > 0">
+        <template v-if="lolPlayerHistoryResponseSimpleDtos.length > 0">
           <ul class="space-y-2">
             <li
-              v-for="(item, index) in riftPlayerHistoryResponseSimpleDtos"
+              v-for="(item, index) in lolPlayerHistoryResponseSimpleDtos"
               :key="index"
               class="bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
             >
