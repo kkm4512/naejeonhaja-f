@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import LolAbyss from '~/components/game/lol/LolAbyss.vue';
+import LolTft from '~/components/game/lol/LolTft.vue';
 
 // 현재 라우터 정보 가져오기
 const route = useRoute();
@@ -13,6 +13,6 @@ const id = Array.isArray(rawId) ? Number(rawId[0]) : Number(rawId);
 </script>
 
 <template>
-  <LolAbyss :id="id" />
+  <LolTft :id="id" />
 </template>
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
+import LolFooter from '~/components/game/lol/LolFooter.vue';
 import type { ApiResponse } from '~/types/common';
-import type { LolPlayerResultHistoryResponseDetailDto } from '~/types/game/lol/rift/res/resLolDto';
+import type { LolPlayerResultHistoryResponseDetailDto } from '~/types/game/lol/res/resLolDto';
 
 // 데이터
 const route = useRoute();
