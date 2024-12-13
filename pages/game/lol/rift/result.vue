@@ -206,9 +206,9 @@ import type { LolTeamResultDto } from '~/types/game/lol/common';
   })
   
   const lolPlayerResultHistoryRequestDto: Ref<LolPlayerResultHistoryRequestDto> = computed(() => ({
-  playerResultHistoryTitle: playerResultHistoryTitle.value,
-  teamA: lolTeamResultRequestDtoA.value,
-  teamB: lolTeamResultRequestDtoB.value,
+    playerResultHistoryTitle: playerResultHistoryTitle.value,
+    teamA: lolTeamResultRequestDtoA.value,
+    teamB: lolTeamResultRequestDtoB.value,
   })
 )
   
