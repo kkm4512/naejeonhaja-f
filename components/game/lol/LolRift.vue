@@ -79,7 +79,6 @@ const sendToServer = async () => {
   lolStore.setInitRiftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
   switchStore.offRiftGoBackedSwitch();
-  console.log(lolPlayerHistoryRequestDto.value)
   const response = saveData.value   
   ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true) 
   : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift","POST",false)
