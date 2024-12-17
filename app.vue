@@ -1,7 +1,16 @@
+<script setup>
+useHead({
+  meta: [
+    {
+      name: "google-site-verification",
+      content: "PRlc-MXZDbtEUlRydHajMzyME7cq0lWQmO9SaHQubBk",
+    },
+  ],
+});
+</script>
+
 <template>
-  <div>
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
