@@ -1,3 +1,4 @@
 export const removeCookie = () => {
-    document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-}
+    document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=naejeonhaja.com";
+  }
+  
