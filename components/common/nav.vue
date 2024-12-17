@@ -17,6 +17,7 @@ const nickname = ref<string | null>(null)
 const cookie = useCookie("Authorization");
 
 onMounted(async () => {
+  console.log("쿠키 값 : " + cookie.value);
   if (cookie.value) {
     jwt.value = cookie.value;
     const user: User = jwtDecode(jwt.value);
