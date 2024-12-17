@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      baseApi: 'https://server.naejeonhaja.com/api/v1', // API 베이스 URL 등도 여기에 정의할 수 있어
+      baseApi: 'https://localhost:8080/api/v1', // API 베이스 URL 등도 여기에 정의할 수 있어
     }
   },  
 })
