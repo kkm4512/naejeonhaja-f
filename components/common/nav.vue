@@ -15,16 +15,6 @@ const lolToggleDropdown = () => {
 const jwt = ref<string | null>("");
 const nickname = ref<string | null>(null)
 const cookie = useCookie("Authorization");
-console.log("마운트 전 쿠키 값 : " + cookie.value);
-
-onMounted(async () => {
-  console.log("마운트 후 쿠키 값 : " + cookie.value);
-  if (cookie.value) {
-    jwt.value = cookie.value;
-    const user: User = jwtDecode(jwt.value);
-    nickname.value = user.nickname;
-  }
-});
 
 // JWT 값 감시 및 닉네임 추출
 watch(

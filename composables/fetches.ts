@@ -3,7 +3,7 @@ import type { ApiResponse } from "~/types/common";
 export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: string,requiresAuth: boolean = false): Promise<R> => {
   const { $redirectToLogin } = useNuxtApp();
     const { public: { baseApi } } = useRuntimeConfig();
-    const jwt = requiresAuth ? getCookie() : null;
+    const jwt = requiresAuth ? useCookie("Authorization") : null;
     const url = baseApi + endPoint;
     const body = data !== null ? JSON.stringify(data) : null;
     let response;

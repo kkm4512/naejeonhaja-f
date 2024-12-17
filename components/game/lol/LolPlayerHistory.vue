@@ -18,7 +18,7 @@ const currentPage = ref(1); // 현재 페이지
 const totalPages = ref(0); // 총 페이지 수
 
 // 쿠키를 통해 로그인 상태 확인
-const isLoggedIn = computed(() => !!getCookie().value);
+const isLoggedIn = computed(() => !!useCookie("Authorization").value);
 
 // 히스토리 토글 함수
 const togglePlayerHistory = async () => {
