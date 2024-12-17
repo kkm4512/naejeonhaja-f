@@ -20,6 +20,7 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       const fetchOptions: RequestInit = {
         method: methods,
         headers,
+        mode: 'cors',
         credentials: "include", // 쿠키 포함 설정
       };
   
