@@ -16,6 +16,14 @@ const jwt = ref<string | null>("");
 const nickname = ref<string | null>(null)
 const cookie = useCookie("Authorization");
 
+onMounted(async () => {
+  if (cookie.value) {
+    jwt.value = cookie.value;
+    const user: User = jwtDecode(jwt.value);
+    nickname.value = user.nickname;
+  }
+});
+
 // JWT 값 감시 및 닉네임 추출
 watch(
   () => cookie.value, // cookie.value만 감지
