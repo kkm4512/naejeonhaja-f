@@ -12,30 +12,33 @@ const lolToggleDropdown = () => {
 };
 
 // 사용자 상태
-const jwt = ref<string>("");
+const jwt = ref<string | null>("");
 const nickname = ref<string | null>(null)
-const cookie = getCookie();
+const cookie = useCookie("Authorization");
 
-
-onMounted( async() => {
+onMounted(async () => {
   if (cookie.value) {
     jwt.value = cookie.value;
-    const user:User = jwtDecode(jwt.value);
+    const user: User = jwtDecode(jwt.value);
     nickname.value = user.nickname;
   }
-})
+});
+
 // JWT 값 감시 및 닉네임 추출
 watch(
-  () => useCookie("Authorization").value,
+  () => cookie.value, // cookie.value만 감지
   (newVal) => {
-    cookie.value = newVal;
-    if (cookie.value) {
-      jwt.value = cookie.value
-      const user:User = jwtDecode(jwt.value);
+    if (newVal) {
+      jwt.value = newVal;
+      const user: User = jwtDecode(newVal);
       nickname.value = user.nickname;
+    } else {
+      jwt.value = null;
+      nickname.value = "";
     }
   }
 );
+
 
 // 상태 관리
 const isResultDropdownOpen = ref(false)
