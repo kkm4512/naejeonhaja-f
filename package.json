@@ -10,10 +10,14 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/content": "^2.13.4",
+    "@nuxtjs/sitemap": "^7.0.0",
     "@pinia/nuxt": "^0.8.0",
     "jwt-decode": "^4.0.0",
     "nuxt": "^3.14.1592",
+    "nuxt-simple-sitemap": "^4.4.1",
     "pinia": "^2.2.8",
+    "sitemap": "^8.0.0",
     "vue": "latest",
     "vue-router": "latest"
   },
