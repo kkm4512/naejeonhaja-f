@@ -2,23 +2,41 @@
 import { ref, computed } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
 import type { LolPlayerHistoryResponseSimpleDto } from '~/types/game/lol/res/resLolDto';
+import LolPlayerHistorySearch from './LolPlayerHistorySearch.vue';
 
 const props = defineProps<{
   domain: string;
 }>();
 
-//메서드
-// 히스토리 표시 여부
+const lolPlayerHistorySearchResults = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
+
+// 메서드
+const handleLolPlayerHistorySearchResults = (results: LolPlayerHistoryResponseSimpleDto[]) => {
+  lolPlayerHistorySearchResults.value = results;
+};
+
+// 변수
 const isHistoryVisible = ref(false);
 const rawDomain = cleanDomain(props.domain);
 
-// 히스토리 데이터 및 페이지 관리
 const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
-const currentPage = ref(1); // 현재 페이지
-const totalPages = ref(0); // 총 페이지 수
+const currentPage = ref(1);
+const totalPages = ref(0);
+
+const emit = defineEmits<{
+  "update:currentPage": [number];
+}>();
 
 // 쿠키를 통해 로그인 상태 확인
 const isLoggedIn = computed(() => !!useCookie("Authorization").value);
+
+// 검색 결과와 기존 데이터를 합쳐서 표시할 데이터를 결정
+const displayedHistory = computed(() => {
+  // `lolPlayerHistorySearchResults`에 데이터가 있으면 그것을 사용하고, 없으면 `lolPlayerHistoryResponseSimpleDtos`를 사용
+  return lolPlayerHistorySearchResults.value.length > 0
+    ? lolPlayerHistorySearchResults.value
+    : lolPlayerHistoryResponseSimpleDtos.value;
+});
 
 // 히스토리 토글 함수
 const togglePlayerHistory = async () => {
@@ -31,7 +49,12 @@ const togglePlayerHistory = async () => {
 
 // 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
-  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(null,`/game/lol/${rawDomain}/playerHistory/simple/${page}`,'GET', true);
+  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(
+    null,
+    `/game/lol/${rawDomain}/playerHistory/simple/${page}`,
+    'GET',
+    true
+  );
   if (response && response.data) {
     lolPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
     totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
@@ -45,9 +68,18 @@ const getPlayerHistory = async (page: number) => {
 const changePage = async (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
-    await getPlayerHistory(page);
+
+    // 검색 결과가 있을 경우, LolPlayerHistorySearch 컴포넌트를 통해 데이터를 가져옴
+    if (lolPlayerHistorySearchResults.value.length > 0) {
+      emit("update:currentPage", page); // currentPage 변경을 하위 컴포넌트에 알림
+    } else {
+      // 검색 결과가 없으면 기존 방식으로 데이터 가져옴
+      await getPlayerHistory(page);
+    }
   }
 };
+
+
 </script>
 
 <template>
@@ -80,20 +112,23 @@ const changePage = async (page: number) => {
     >
       <!-- 로그인 여부에 따라 내용 변경 -->
       <template v-if="isLoggedIn">
-        <h3 class="text-lg font-bold mb-3">📜 팀 히스토리</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold mb-3">📜 팀 히스토리</h3>
+          <LolPlayerHistorySearch :domain="rawDomain" :currentPage="currentPage" @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults" />
+        </div>
 
         <!-- 히스토리 유무에 따라 다른 메시지 표시 -->
-        <template v-if="lolPlayerHistoryResponseSimpleDtos.length > 0">
+        <template v-if="displayedHistory.length > 0">
           <ul class="space-y-2">
             <li
-              v-for="(item, index) in lolPlayerHistoryResponseSimpleDtos"
+              v-for="(item, index) in displayedHistory"
               :key="index"
               class="bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
             >
               <a 
                 :href="`/game/lol/${rawDomain}/${item.playerHistoryId}`" 
                 class="text-blue-500 hover:underline block truncate"
-                title=" {{ item.playerHistoryTitle }}"
+                title="{{ item.playerHistoryTitle }}"
               >
                 {{ item.playerHistoryTitle }}
               </a>
@@ -125,6 +160,7 @@ const changePage = async (page: number) => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .rotate-180 {
