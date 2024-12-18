@@ -5,7 +5,7 @@ useHead({
   title: '내전하자',
   meta: [
     { name: 'description', content: '5:5 팀 내전을 위한 실시간 매칭 및 경기 관리 플랫폼. 팀을 만들고 전략적으로 내전을 즐기세요.' },
-    { name: 'keywords', content: '5:5 내전, 게임 매칭, 팀 매칭, 실시간 경기 관리, 내전 플랫폼, 팀 내전' },
+    { name: 'keywords', content: '5:5 내전, 롤 내전, 게임 매칭, 팀 매칭, 실시간 경기 관리, 내전 플랫폼, 팀 내전, 게임 팀 내전, 롤 팀 매칭, 게임 내전 사이트, 내전 매칭 플랫폼, 내전 경기 관리, 온라인 내전, 전략 게임 내전, 내전 팀 만들기, 롤 5:5 매칭, 팀 게임 매칭, 내전하자, 롤 팀 게임, 내전 커뮤니티, 게임 전략 플랫폼, 롤 내전 사이트' },
     { name: 'google-site-verification', content: 'PRlc-MXZDbtEUlRydHajMzyME7cq0lWQmO9SaHQubBk' },
     // Open Graph 설정
     { property: 'og:title', content: '내전하자' },
