@@ -12,7 +12,7 @@ useHead({
     { property: 'og:description', content: '5:5 팀 내전을 위한 실시간 매칭 및 경기 관리 플랫폼.' },
     { property: 'og:url', content: 'https://www.naejeonhaja.com' },
     { property: 'og:type', content: 'website' },
-    { property: 'og:image', content: 'https://www.naejeonhaja.com/logo/logo.webp' },
+    { property: 'og:image', content: '/logo/logo.webp' },
     { property: 'og:image:alt', content: '내전하자 로고 이미지' },
     { property: 'og:image:type', content: 'image/webp' },
     { property: 'og:image:width', content: '1200' },
@@ -20,8 +20,8 @@ useHead({
   ],
   link: [
     // Favicon 및 iOS 아이콘 설정
-    { rel: 'icon', type: 'image/webp', href: 'https://www.naejeonhaja.com/logo/logo.webp' },
-    { rel: 'apple-touch-icon', sizes: '180x180', href: 'https://www.naejeonhaja.com/logo/logo.webp' }
+    { rel: 'icon', type: 'image/webp', href: '/logo/logo.webp' },
+    { rel: 'apple-touch-icon', sizes: '180x180', href: '/logo/logo.webp' }
   ]
 });
 </script>
