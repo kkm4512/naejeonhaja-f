@@ -22,6 +22,7 @@ const rawDomain = cleanDomain(props.domain);
 const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
 const currentPage = ref(1);
 const totalPages = ref(0);
+const searchQuery = ref(''); // 검색어 상태
 
 const emit = defineEmits<{
   "update:currentPage": [number];
@@ -30,13 +31,23 @@ const emit = defineEmits<{
 // 쿠키를 통해 로그인 상태 확인
 const isLoggedIn = computed(() => !!useCookie("Authorization").value);
 
-// 검색 결과와 기존 데이터를 합쳐서 표시할 데이터를 결정
+const isSearchActive = computed(() => searchQuery.value.trim() !== ''); // 검색 상태를 확인
+
 const displayedHistory = computed(() => {
-  // `lolPlayerHistorySearchResults`에 데이터가 있으면 그것을 사용하고, 없으면 `lolPlayerHistoryResponseSimpleDtos`를 사용
-  return lolPlayerHistorySearchResults.value.length > 0
-    ? lolPlayerHistorySearchResults.value
-    : lolPlayerHistoryResponseSimpleDtos.value;
+  // 검색 중이고 결과가 없는 경우 빈 배열 반환
+  if (isSearchActive.value && lolPlayerHistorySearchResults.value.length === 0) {
+    return [];
+  }
+
+  // 검색 중일 때 검색 결과 사용
+  if (isSearchActive.value) {
+    return lolPlayerHistorySearchResults.value;
+  }
+
+  // 검색 상태가 아닐 때 기본 데이터 사용
+  return lolPlayerHistoryResponseSimpleDtos.value;
 });
+
 
 // 히스토리 토글 함수
 const togglePlayerHistory = async () => {
@@ -108,13 +119,18 @@ const changePage = async (page: number) => {
     <!-- 히스토리 내역 또는 로그인 안내 -->
     <div
       v-if="isHistoryVisible"
-      class="mt-2 bg-white shadow-lg rounded p-4 max-h-64 overflow-y-auto w-80 border"
+      class="mt-2 bg-white shadow-lg rounded p-4 max-h-64 overflow-y-auto w-96 border"
     >
       <!-- 로그인 여부에 따라 내용 변경 -->
       <template v-if="isLoggedIn">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-bold mb-3">📜 팀 히스토리</h3>
-          <LolPlayerHistorySearch :domain="rawDomain" :currentPage="currentPage" @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults" />
+          <LolPlayerHistorySearch
+           :domain="rawDomain" 
+           :currentPage="currentPage" 
+           @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults"
+           v-model="searchQuery"
+            />
         </div>
 
         <!-- 히스토리 유무에 따라 다른 메시지 표시 -->
@@ -154,7 +170,7 @@ const changePage = async (page: number) => {
             </button>
           </div>
         </template>
-        <p v-else class="text-gray-500">아직 저장된 팀 내역이 없습니다.</p>
+        <p v-else class="text-gray-500">조회되는 팀 내역이 없습니다</p>
       </template>
       <p v-else class="text-red-500">로그인 후 이용 가능합니다.</p>
     </div>

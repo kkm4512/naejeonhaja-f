@@ -7,18 +7,24 @@ const props = defineProps<{
   domain: string;
   currentPage: number;
 }>();
+
+const onInput = (event: Event) => {
+  const newQuery = (event.target as HTMLInputElement).value;
+  emit("update:modelValue", newQuery); // 부모로 입력 값을 전달
+};
+
 const emit = defineEmits<{
   "update:lolPlayerHistorySearchResults": [LolPlayerHistoryResponseSimpleDto[]];
+  "update:modelValue": [string]; // 부모와 검색어 공유를 위한 이벤트
 }>();
 
-const searchQuery = ref('');
+const searchQuery = ref(''); // 로컬에서 검색어 관리
 const rawDomain = cleanDomain(props.domain);
 
 // 디바운스 함수
 const emitSearchResults = debounce(async (query: string, page: number) => {
   if (query.trim() === '') {
-    // 검색어가 비어 있을 때 결과를 초기화
-    emit("update:lolPlayerHistorySearchResults", []);
+    emit("update:lolPlayerHistorySearchResults", []); // 검색 결과 초기화
     return;
   }
 
@@ -28,15 +34,16 @@ const emitSearchResults = debounce(async (query: string, page: number) => {
     "GET",
     true
   );
-  emit("update:lolPlayerHistorySearchResults", response.data);
-}, 300); // 300ms 대기 후 실행
+  emit("update:lolPlayerHistorySearchResults", response.data); // 부모에게 검색 결과 전달
+}, 300);
 
-// searchQuery가 변경될 때 검색
+// 검색어 변경 시 부모에게 알림
 watch(searchQuery, (newQuery) => {
-  emitSearchResults(newQuery, props.currentPage);
+  emit("update:modelValue", newQuery); // 부모에게 검색어 업데이트
+  emitSearchResults(newQuery, props.currentPage); // 검색 실행
 });
 
-// currentPage가 변경될 때 검색
+// 페이지 변경 시 검색 실행
 watch(
   () => props.currentPage,
   (newPage) => {
@@ -45,17 +52,16 @@ watch(
 );
 </script>
 
-
 <template>
-  <div class="p-4 max-w-md mx-auto">
+  <div class="flex justify-end items-center p-4">
     <!-- 검색 입력 -->
-    <div class="mb-4">
-      <input
-        type="text"
-        v-model="searchQuery"
-        placeholder="검색할 내용 기재"
-        class="w-full px-4 py-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
+    <input
+      type="text"
+      v-model="searchQuery"
+      @input="onInput"
+      placeholder="검색할 내용을 입력하세요"
+      class="w-48 p-2 border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
   </div>
 </template>
+
