@@ -1,5 +1,5 @@
 <script setup>
-import { Analytics } from '@vercel/analytics/nuxt';
+import { Analytics } from '@vercel/analytics/nuxt'
 useHead({
   title: '내전하자',
   meta: [

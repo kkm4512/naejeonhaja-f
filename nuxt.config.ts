@@ -1,9 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { Analytics } from '@vercel/analytics/nuxt'
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   css: ['~/assets/css/main.css'],
-  modules: ['@pinia/nuxt',Analytics ],
+  modules: ['@pinia/nuxt'], // 문자열 형태로 추가
   devtools: { enabled: true },
   postcss: {
     plugins: {
