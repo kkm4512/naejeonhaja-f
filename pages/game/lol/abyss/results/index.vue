@@ -1,10 +1,17 @@
 <template>
     <div class="p-4 bg-gray-100 min-h-screen flex flex-col items-center">
       <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">칼바람의 나락 대전결과들</h1>
+      <LolPlayerResultHistorySearch
+        domain="abyss" 
+        :currentPage="currentPage" 
+        @update:lolPlayerResultHistorySearchResults="handleLolPlayerResultHistorySearchResults"
+        @update:currentPage="handleCurrentPageUpdate"
+        v-model="searchQuery"
+        />
       <div class="w-full max-w-4xl space-y-4">
         <!-- 카드 리스트 -->
         <div
-            v-for="history in playerHistories"
+            v-for="history in displayedHistory"
             :key="history.playerResultHistoryId"
             class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300 cursor-pointer border border-gray-200 flex items-center justify-center"
         >
@@ -66,19 +73,34 @@
     
   <script setup lang="ts">
   import LolFooter from "~/components/game/lol/LolFooter.vue";
-import type { ApiResponse, Page } from "~/types/common";
-import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/res/resLolDto";
+  import LolPlayerResultHistorySearch from "~/components/game/lol/LolPlayerResultHistorySearch.vue";
+  import type { ApiResponse, Page } from "~/types/common";
+  import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/res/resLolDto";
   
   // 데이터 상태 정의
-  const playerHistories = ref<LolPlayerResultHistoryResponseSimpleDto[]>([]);
   const currentPage = ref(1);
   const totalPages = ref(1); // 총 페이지 수 초기화
+  const searchQuery = ref(''); // 검색어 상태
+  const lolPlayerResultHistorySearchResults = ref<Page<LolPlayerResultHistoryResponseSimpleDto>>({
+    content: [], // 기본값 설정
+      page: {
+      totalPages: 0,
+      totalElements: 0,
+      size: 0,
+      number: 0,
+    },
+  });
+  const lolPlayerResultHistoryResponseSimpleDtos = ref<LolPlayerResultHistoryResponseSimpleDto[]>([]);
+  const isSearchActive = computed(() => searchQuery.value.trim() !== ''); // 검색 상태를 확인
+  const emit = defineEmits<{
+    "update:currentPage": [number];
+  }>();
   
   // 데이터 가져오기 함수
   const fetchPlayerHistories = async() => {
       const response = await uFetch<null,ApiResponse<Page<LolPlayerResultHistoryResponseSimpleDto>>>(null, `/game/lol/abyss/playerResultHistory/simple/${currentPage.value}`, "GET", true);
       if (response?.data) {
-        playerHistories.value = response.data.content
+        lolPlayerResultHistoryResponseSimpleDtos.value = response.data.content
         totalPages.value = response.data.page.totalPages
       }
   };
@@ -87,9 +109,32 @@ import type { LolPlayerResultHistoryResponseSimpleDto } from "~/types/game/lol/r
   const changePage = async (page: number) => {
     if (page >= 1 && page <= totalPages.value) {
       currentPage.value = page; // 현재 페이지 변경
-      await fetchPlayerHistories(); // 변경된 페이지에 맞는 데이터 요청
+      if (searchQuery.value && lolPlayerResultHistorySearchResults.value.content.length > 0) {
+        emit("update:currentPage", page); // currentPage 변경을 하위 컴포넌트에 알림
+      } 
+      else {
+        await fetchPlayerHistories(); // 변경된 페이지에 맞는 데이터 요청
+      }
     }
   };
+
+  const handleLolPlayerResultHistorySearchResults = (results: Page<LolPlayerResultHistoryResponseSimpleDto>) => {
+    totalPages.value = results.page.totalPages;
+    lolPlayerResultHistorySearchResults.value = results;
+};
+
+const displayedHistory = computed(() => {
+  // 검색 중일 때 검색 결과 사용
+  if (isSearchActive.value) {
+    return lolPlayerResultHistorySearchResults.value.content;
+  }
+  // 검색 상태가 아닐 때 기본 데이터 사용
+  return lolPlayerResultHistoryResponseSimpleDtos.value;
+});  
+
+const handleCurrentPageUpdate = (page: number) => {
+  currentPage.value = page;
+};
   
   // 컴포넌트 로드 시 데이터 가져오기
   onMounted(async() => {
