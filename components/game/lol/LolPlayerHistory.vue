@@ -8,12 +8,15 @@ const props = defineProps<{
   domain: string;
 }>();
 
-const lolPlayerHistorySearchResults = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
-
-// 메서드
-const handleLolPlayerHistorySearchResults = (results: LolPlayerHistoryResponseSimpleDto[]) => {
-  lolPlayerHistorySearchResults.value = results;
-};
+const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistoryResponseSimpleDto>>({
+  content: [], // 기본값 설정
+  page: {
+    totalPages: 0,
+    totalElements: 0,
+    size: 0,
+    number: 0,
+  },
+});
 
 // 변수
 const isHistoryVisible = ref(false);
@@ -34,14 +37,10 @@ const isLoggedIn = computed(() => !!useCookie("Authorization").value);
 const isSearchActive = computed(() => searchQuery.value.trim() !== ''); // 검색 상태를 확인
 
 const displayedHistory = computed(() => {
-  // 검색 중이고 결과가 없는 경우 빈 배열 반환
-  if (isSearchActive.value && lolPlayerHistorySearchResults.value.length === 0) {
-    return [];
-  }
 
   // 검색 중일 때 검색 결과 사용
   if (isSearchActive.value) {
-    return lolPlayerHistorySearchResults.value;
+    return lolPlayerHistorySearchResults.value.content
   }
 
   // 검색 상태가 아닐 때 기본 데이터 사용
@@ -49,12 +48,27 @@ const displayedHistory = computed(() => {
 });
 
 
+// 메서드
+const handleCurrentPageUpdate = (page: number) => {
+  currentPage.value = page;
+};
+
+// 검색제목에 무엇이 입력되었을때 업데이트되는 메서드
+const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistoryResponseSimpleDto>) => {
+  totalPages.value = results.page.totalPages;
+  lolPlayerHistorySearchResults.value = results;
+};
+
+
 // 히스토리 토글 함수
 const togglePlayerHistory = async () => {
   isHistoryVisible.value = !isHistoryVisible.value;
   if (isHistoryVisible.value === true) {
-    currentPage.value = 1; // 페이지 초기화
-    await getPlayerHistory(currentPage.value);
+    // 토글을 다시 열면 검색어 초기화
+    searchQuery.value = "";
+    if (!searchQuery.value && !lolPlayerHistorySearchResults.value)
+      currentPage.value = 1; // 페이지 초기화
+      await getPlayerHistory(currentPage.value);
   }
 };
 
@@ -69,9 +83,6 @@ const getPlayerHistory = async (page: number) => {
   if (response && response.data) {
     lolPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
     totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
-  } else {
-    lolPlayerHistoryResponseSimpleDtos.value = []; // 데이터가 없으면 빈 배열
-    totalPages.value = 0;
   }
 };
 
@@ -81,9 +92,10 @@ const changePage = async (page: number) => {
     currentPage.value = page;
 
     // 검색 결과가 있을 경우, LolPlayerHistorySearch 컴포넌트를 통해 데이터를 가져옴
-    if (lolPlayerHistorySearchResults.value.length > 0) {
+    if (searchQuery.value && lolPlayerHistorySearchResults.value.content.length > 0) {
       emit("update:currentPage", page); // currentPage 변경을 하위 컴포넌트에 알림
-    } else {
+    } 
+    else {
       // 검색 결과가 없으면 기존 방식으로 데이터 가져옴
       await getPlayerHistory(page);
     }
@@ -129,6 +141,8 @@ const changePage = async (page: number) => {
            :domain="rawDomain" 
            :currentPage="currentPage" 
            @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults"
+           @update:currentPage="handleCurrentPageUpdate"
+
            v-model="searchQuery"
             />
         </div>
