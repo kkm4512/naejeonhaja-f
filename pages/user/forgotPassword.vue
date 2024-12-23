@@ -1,7 +1,11 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import type { ApiResponse } from "~/types/common";
-import type { SendVerificationCodeDto, UpdatePasswordDto, VerificationCodeDto } from "~/types/user/req/ForgotPasswordDto";
+import type {
+  SendVerificationCodeDto,
+  UpdatePasswordDto,
+  VerificationCodeDto,
+} from "~/types/user/req/ForgotPasswordDto";
 
 const email = ref<string>("");
 const code = ref<string>("");
@@ -10,33 +14,32 @@ const confirmPassword = ref<string>("");
 const isCodeSent = ref(false);
 const isCodeVerified = ref(false);
 const router = useRouter();
+// Pinia 스토어 가져오기
 
-const sendVerificationCodeDto: Ref<SendVerificationCodeDto> = computed(() => ({
+const sendVerificationCodeDto = computed(() => ({
   email: email.value,
 }));
 
-const verificationCodeDto: Ref<VerificationCodeDto> = computed(() => ({
+const verificationCodeDto = computed(() => ({
   email: email.value,
   code: code.value,
 }));
 
-const updatePasswordDto: Ref<UpdatePasswordDto> = computed(() => ({
+const updatePasswordDto = computed(() => ({
   email: email.value,
-  password: newPassword.value
+  password: newPassword.value,
 }));
 
-
 const sendCode = async () => {
-  try {
-    const response = await uFetch<SendVerificationCodeDto, ApiResponse<void>>(sendVerificationCodeDto.value,"/users/send-code","POST");
-    if (response.code === 200) {
-      alert("인증번호가 이메일로 전송되었습니다.");
-      isCodeSent.value = true;
-    } else {
-      alert("오류가 발생했습니다. 이메일을 확인해주세요.");
-    }
-  } catch (error) {
-    alert("서버에 문제가 발생했습니다. 다시 시도해주세요.");
+  const response = await uFetch<SendVerificationCodeDto, ApiResponse<void>>(
+    sendVerificationCodeDto.value,
+    "/users/send-code",
+    "POST"
+  );
+  if (response.code === 200) {
+    isCodeSent.value = true;
+  } else {
+    alert("오류가 발생했습니다. 이메일을 확인해주세요.");
   }
 };
 
@@ -45,17 +48,16 @@ const verifyCode = async () => {
     alert("인증번호를 입력해주세요.");
     return;
   }
-  try {
-    const response = await uFetch<VerificationCodeDto,ApiResponse<void>>(verificationCodeDto.value,"/users/verify-code","POST");
+    const response = await uFetch<VerificationCodeDto, ApiResponse<void>>(
+      verificationCodeDto.value,
+      "/users/verify-code",
+      "POST"
+    );
     if (response.code === 200) {
-      alert("인증번호가 확인되었습니다.");
       isCodeVerified.value = true;
     } else {
       alert("인증번호가 일치하지 않습니다.");
     }
-  } catch (error) {
-    alert("서버에 문제가 발생했습니다. 다시 시도해주세요.");
-  }
 };
 
 const updatePassword = async () => {
@@ -67,10 +69,14 @@ const updatePassword = async () => {
     alert("비밀번호가 일치하지 않습니다.");
     return;
   }
-    const response = await uFetch<UpdatePasswordDto, ApiResponse<void>>(updatePasswordDto.value,"/users/update-password","PUT");
+    const response = await uFetch<UpdatePasswordDto, ApiResponse<void>>(
+      updatePasswordDto.value,
+      "/users/update-password",
+      "PUT"
+    );
     if (response.code === 200) {
       alert("비밀번호가 성공적으로 변경되었습니다.");
-      router.push("/")
+      router.push("/");
     } else {
       alert("오류가 발생했습니다. 다시 시도해주세요.");
     }
@@ -81,7 +87,9 @@ const updatePassword = async () => {
   <div class="min-h-screen flex items-center justify-center bg-white border border-black">
     <div class="w-full max-w-sm p-8 bg-white shadow-lg rounded-lg border border-gray-300">
       <h2 class="text-3xl font-bold text-center text-black-700 mb-6">비밀번호 찾기</h2>
-      <p class="text-center text-gray-500 mb-8 text-sm">이메일 주소를 입력하여 인증번호를 요청하세요.</p>
+      <p class="text-center text-gray-500 mb-8 text-sm">
+        이메일 주소를 입력하여 인증번호를 요청하세요.
+      </p>
 
       <!-- 이메일 입력 -->
       <div class="flex items-center">
@@ -101,7 +109,7 @@ const updatePassword = async () => {
           @click="sendCode"
           class="ml-4 mt-6 py-2 px-4 bg-green-600 text-white text-sm font-semibold rounded-md shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          확인
+          <span>확인</span>
         </button>
       </div>
 
