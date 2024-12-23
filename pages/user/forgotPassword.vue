@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
+import LoadingOverlay from "~/components/common/LoadingOverlay.vue";
 import type { ApiResponse } from "~/types/common";
 import type {
   SendVerificationCodeDto,
@@ -166,6 +167,7 @@ const updatePassword = async () => {
       </div>
     </div>
   </div>
+  <LoadingOverlay />
 </template>
 
 <style lang="postcss" scoped>

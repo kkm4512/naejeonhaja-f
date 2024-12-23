@@ -1,4 +1,5 @@
 import type { LolPlayerDto, LolTeamResultDto } from "../common";
+import type { LolPlayerHistorySimpleDto } from "../res/resLolDto";
 
 export type LolPlayerHistoryRequestDto = {
   playerHistoryTitle: string | null; 
@@ -10,6 +11,16 @@ export type LolPlayerResultHistoryRequestDto = {
   teamA: LolTeamResultDto; 
   teamB: LolTeamResultDto; 
 };
+
+export type LolPlayerHistoryDeleteAllRequestDto = {
+  lolPlayerHistorySimpleDtos: LolPlayerHistorySimpleDto[];
+}
+
+export type LolPlayerHistoryUpdateRequestDto = {
+  playerHistoryTitle: string;
+} 
+
+
 
 
 
