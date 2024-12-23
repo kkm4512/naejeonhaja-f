@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
-import type { LolPlayerHistoryResponseSimpleDto } from '~/types/game/lol/res/resLolDto';
+import type { LolPlayerHistorySimpleDto } from '~/types/game/lol/res/resLolDto';
 
 const props = defineProps<{
   domain: string;
@@ -14,7 +14,7 @@ const onInput = (event: Event) => {
 };
 
 const emit = defineEmits<{
-  "update:lolPlayerHistorySearchResults": [Page<LolPlayerHistoryResponseSimpleDto>];
+  "update:lolPlayerHistorySearchResults": [Page<LolPlayerHistorySimpleDto>];
   "update:modelValue": [string]; // 부모와 검색어 공유를 위한 이벤트
   "update:currentPage": [number];
 }>();
@@ -25,7 +25,7 @@ const rawDomain = cleanDomain(props.domain);
 // 디바운스 함수
 const emitSearchResults = debounce(async (query: string, page: number) => {
 
-  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(
+  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistorySimpleDto>>>(
     null,
     `/game/lol/${rawDomain}/simpleSearch?playerHistoryTitle=${query}&page=${page}`,
     "GET",

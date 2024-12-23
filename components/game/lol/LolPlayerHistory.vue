@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
-import type { LolPlayerHistoryResponseSimpleDto } from '~/types/game/lol/res/resLolDto';
+import type { LolPlayerHistorySimpleDto } from '~/types/game/lol/res/resLolDto';
 import LolPlayerHistorySearch from './LolPlayerHistorySearch.vue';
+import LolPlayerHistoryUpdate from './LolPlayerHistoryUpdate.vue';
+import type { LolPlayerHistoryUpdateRequestDto } from '~/types/game/lol/req/reqLolDto';
 
 const props = defineProps<{
   domain: string;
 }>();
 
-const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistoryResponseSimpleDto>>({
+const selectedItem = ref<number>(); // 선택된 체크박스 아이템
+const showModal = ref(false);
+const selectedTitle = ref('');
+const selectedId = ref(0);
+
+const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistorySimpleDto>>({
   content: [], // 기본값 설정
   page: {
     totalPages: 0,
@@ -22,7 +29,7 @@ const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistoryResponseSimpleDto
 const isHistoryVisible = ref(false);
 const rawDomain = cleanDomain(props.domain);
 
-const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
+const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistorySimpleDto[]>([]);
 const currentPage = ref(1);
 const totalPages = ref(0);
 const searchQuery = ref(''); // 검색어 상태
@@ -49,12 +56,19 @@ const displayedHistory = computed(() => {
 
 
 // 메서드
+// 모달 열기 및 제목 설정
+const openEditModal = (item: LolPlayerHistorySimpleDto) => {
+  selectedTitle.value = item.playerHistoryTitle; // 선택된 제목 업데이트
+  selectedId.value = item.playerHistoryId;
+  showModal.value = true; // 모달 열기
+};
+
 const handleCurrentPageUpdate = (page: number) => {
   currentPage.value = page;
 };
 
 // 검색제목에 무엇이 입력되었을때 업데이트되는 메서드
-const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistoryResponseSimpleDto>) => {
+const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistorySimpleDto>) => {
   totalPages.value = results.page.totalPages;
   lolPlayerHistorySearchResults.value = results;
 };
@@ -74,7 +88,7 @@ const togglePlayerHistory = async () => {
 
 // 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
-  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(
+  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistorySimpleDto>>>(
     null,
     `/game/lol/${rawDomain}/playerHistory/simple/${page}`,
     'GET',
@@ -83,6 +97,24 @@ const getPlayerHistory = async (page: number) => {
   if (response && response.data) {
     lolPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
     totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
+  }
+};
+
+// 항목 삭제
+const deleteItem = async (playerHistoryId: number) => {
+  if (confirm(`이 플레이어 내역을 삭제하시겠습니까?`)) {
+    const response = await uFetch<null, ApiResponse<void>>(
+      null,
+      `/game/lol/rift/playerHistory/${playerHistoryId}`,
+      'DELETE',
+      true
+    );
+    if (response && response.code === 200) {
+      alert('삭제되었습니다.');
+      await getPlayerHistory(currentPage.value);
+    } else {
+      alert('삭제에 실패했습니다.');
+    }
   }
 };
 
@@ -99,6 +131,21 @@ const changePage = async (page: number) => {
       // 검색 결과가 없으면 기존 방식으로 데이터 가져옴
       await getPlayerHistory(page);
     }
+  }
+};
+
+// 제목 저장 이벤트 핸들러
+const handleSave = async(newTitle: string, id: number) => {
+  const dto: LolPlayerHistoryUpdateRequestDto = {
+    playerHistoryTitle: newTitle,
+  }
+  const response = await uFetch<LolPlayerHistoryUpdateRequestDto,ApiResponse<void>>(dto,`/game/lol/rift/playerHistory/${id}`,"PUT",true);
+  if (response.code === 200) {
+    const updatedItem = displayedHistory.value.find(item => item.playerHistoryId === id);
+    if (updatedItem) {
+      updatedItem.playerHistoryTitle = newTitle; // 수정된 제목 반영
+    }
+    alert("수정에 성공 하였습니다") 
   }
 };
 
@@ -138,13 +185,12 @@ const changePage = async (page: number) => {
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-bold mb-3">📜 팀 히스토리</h3>
           <LolPlayerHistorySearch
-           :domain="rawDomain" 
-           :currentPage="currentPage" 
-           @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults"
-           @update:currentPage="handleCurrentPageUpdate"
-
-           v-model="searchQuery"
-            />
+            :domain="rawDomain" 
+            :currentPage="currentPage" 
+            @update:lolPlayerHistorySearchResults="handleLolPlayerHistorySearchResults"
+            @update:currentPage="handleCurrentPageUpdate"
+            v-model="searchQuery"
+          />
         </div>
 
         <!-- 히스토리 유무에 따라 다른 메시지 표시 -->
@@ -153,15 +199,49 @@ const changePage = async (page: number) => {
             <li
               v-for="(item, index) in displayedHistory"
               :key="index"
-              class="bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
+              class="flex items-center bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
             >
-              <a 
-                :href="`/game/lol/${rawDomain}/${item.playerHistoryId}`" 
-                class="text-blue-500 hover:underline block truncate"
-                title="{{ item.playerHistoryTitle }}"
+              <!-- 라디오 버튼 -->
+              <input
+                type="radio"
+                class="mr-4"
+                :value="item.playerHistoryId"
+                v-model="selectedItem"
+              />
+
+              <!-- 히스토리 제목 -->
+              <a
+                :href="`/game/lol/${rawDomain}/${item.playerHistoryId}`"
+                class="flex-1 text-blue-500 hover:underline truncate"
+                :title="item.playerHistoryTitle"
               >
                 {{ item.playerHistoryTitle }}
               </a>
+
+              <!-- 수정 및 삭제 버튼 -->
+              <div class="flex space-x-2">
+                <div>
+                  <button
+                    class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    @click="openEditModal(item)"
+                  >
+                    수정
+                  </button>
+                  <LolPlayerHistoryUpdate
+                    :visible="showModal"
+                    :currentTitle="selectedTitle"
+                    :currentId="selectedId"
+                    @update:visible="(value: boolean) => (showModal = value)"
+                    @save="handleSave"
+                  />
+                </div>
+                <button
+                  class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  @click="deleteItem(item.playerHistoryId)"
+                >
+                  삭제
+                </button>
+              </div>
             </li>
           </ul>
 
@@ -190,6 +270,7 @@ const changePage = async (page: number) => {
     </div>
   </div>
 </template>
+
 
 
 <style scoped>

@@ -7,6 +7,7 @@ import { useLolStore } from '~/stores/lol/useLolStore';
 import type { Line, LineRole, LolPlayerDto, Tier } from '~/types/game/lol/common';
 import LolFooter from './LolFooter.vue';
 import LolPlayerHistory from './LolPlayerHistory.vue';
+import LoadingOverlay from '~/components/common/LoadingOverlay.vue';
 
 // Props
 const props = defineProps<{
