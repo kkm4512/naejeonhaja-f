@@ -1,6 +1,7 @@
 <script setup>
 // useHead로 메타 및 Open Graph 태그 설정
 import { Analytics } from '@vercel/analytics/nuxt'
+import LoadingOverlay from './components/common/LoadingOverlay.vue';
 useHead({
   title: '내전하자',
   meta: [
@@ -31,4 +32,5 @@ useHead({
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <LoadingOverlay />
 </template>

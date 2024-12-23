@@ -6,9 +6,11 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
     const jwt = requiresAuth ? useCookie("Authorization") : null;
     const url = baseApi + endPoint;
     const body = data !== null ? JSON.stringify(data) : null;
+    const loadingStore = useLoadingStore(); // 로딩 스토어 사용
     let response;
   
     try {
+      loadingStore.startLoading();
       // 요청 옵션 설정
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -50,6 +52,8 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       return result as R;
     } catch (error) {
       throw error;
+    } finally {
+      loadingStore.stopLoading();
     }
   };
   
