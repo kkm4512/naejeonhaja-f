@@ -5,18 +5,19 @@ import type { LolPlayerHistorySimpleDto } from '~/types/game/lol/res/resLolDto';
 import LolPlayerHistorySearch from './LolPlayerHistorySearch.vue';
 import LolPlayerHistoryUpdate from './LolPlayerHistoryUpdate.vue';
 import type { LolPlayerHistoryUpdateRequestDto } from '~/types/game/lol/req/reqLolDto';
+import SvgIcon from '@jamescoyle/vue-icon';
+import { mdilPencil, mdilDelete } from '@mdi/light-js';
 
 const props = defineProps<{
   domain: string;
 }>();
 
-const selectedItem = ref<number>(); // 선택된 체크박스 아이템
 const showModal = ref(false);
 const selectedTitle = ref('');
 const selectedId = ref(0);
 
 const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistorySimpleDto>>({
-  content: [], // 기본값 설정
+  content: [],
   page: {
     totalPages: 0,
     totalElements: 0,
@@ -34,6 +35,9 @@ const currentPage = ref(1);
 const totalPages = ref(0);
 const searchQuery = ref(''); // 검색어 상태
 
+// 선택된 항목 관리
+const selectedItems = ref<LolPlayerHistorySimpleDto[]>([]);
+
 const emit = defineEmits<{
   "update:currentPage": [number];
 }>();
@@ -44,49 +48,39 @@ const isLoggedIn = computed(() => !!useCookie("Authorization").value);
 const isSearchActive = computed(() => searchQuery.value.trim() !== ''); // 검색 상태를 확인
 
 const displayedHistory = computed(() => {
-
-  // 검색 중일 때 검색 결과 사용
   if (isSearchActive.value) {
-    return lolPlayerHistorySearchResults.value.content
+    return lolPlayerHistorySearchResults.value.content;
   }
-
-  // 검색 상태가 아닐 때 기본 데이터 사용
   return lolPlayerHistoryResponseSimpleDtos.value;
 });
 
-
 // 메서드
-// 모달 열기 및 제목 설정
 const openEditModal = (item: LolPlayerHistorySimpleDto) => {
-  selectedTitle.value = item.playerHistoryTitle; // 선택된 제목 업데이트
+  selectedTitle.value = item.playerHistoryTitle;
   selectedId.value = item.playerHistoryId;
-  showModal.value = true; // 모달 열기
+  showModal.value = true;
 };
 
 const handleCurrentPageUpdate = (page: number) => {
   currentPage.value = page;
 };
 
-// 검색제목에 무엇이 입력되었을때 업데이트되는 메서드
 const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistorySimpleDto>) => {
   totalPages.value = results.page.totalPages;
   lolPlayerHistorySearchResults.value = results;
 };
 
-
-// 히스토리 토글 함수
 const togglePlayerHistory = async () => {
   isHistoryVisible.value = !isHistoryVisible.value;
-  if (isHistoryVisible.value === true) {
-    // 토글을 다시 열면 검색어 초기화
-    searchQuery.value = "";
-    if (!searchQuery.value && !lolPlayerHistorySearchResults.value)
-      currentPage.value = 1; // 페이지 초기화
-      await getPlayerHistory(currentPage.value);
+  if (isHistoryVisible.value) {
+    searchQuery.value = '';
+    if (!searchQuery.value && !lolPlayerHistorySearchResults.value) {
+      currentPage.value = 1;
+    }
+    await getPlayerHistory(currentPage.value);
   }
 };
 
-// 서버에서 히스토리 데이터 가져오기
 const getPlayerHistory = async (page: number) => {
   const response = await uFetch<null, ApiResponse<Page<LolPlayerHistorySimpleDto>>>(
     null,
@@ -95,62 +89,128 @@ const getPlayerHistory = async (page: number) => {
     true
   );
   if (response && response.data) {
-    lolPlayerHistoryResponseSimpleDtos.value = response.data.content; // 데이터를 저장
-    totalPages.value = response.data.page.totalPages; // 총 페이지 수 저장
+    lolPlayerHistoryResponseSimpleDtos.value = response.data.content;
+    totalPages.value = response.data.page.totalPages;
   }
 };
 
-// 항목 삭제
 const deleteItem = async (playerHistoryId: number) => {
   if (confirm(`이 플레이어 내역을 삭제하시겠습니까?`)) {
-    const response = await uFetch<null, ApiResponse<void>>(
-      null,
-      `/game/lol/rift/playerHistory/${playerHistoryId}`,
-      'DELETE',
-      true
-    );
-    if (response && response.code === 200) {
-      alert('삭제되었습니다.');
+    const response = await uFetch<null, ApiResponse<void>>(null,`/game/lol/rift/playerHistory/${playerHistoryId}`,'DELETE',true);
+
+    if (response.code === 200) {
+      // 삭제된 항목을 데이터에서 제거
+      lolPlayerHistoryResponseSimpleDtos.value = lolPlayerHistoryResponseSimpleDtos.value.filter(
+        item => item.playerHistoryId !== playerHistoryId
+      );
+
+      // 현재 페이지의 데이터가 모두 삭제된 경우 이전 페이지로 이동
+      if (lolPlayerHistoryResponseSimpleDtos.value.length === 0 && currentPage.value > 1) {
+        currentPage.value -= 1; // 이전 페이지로 이동
+      }
+
+      // 페이지 데이터 새로 가져오기
       await getPlayerHistory(currentPage.value);
-    } else {
-      alert('삭제에 실패했습니다.');
+
     }
   }
 };
 
-// 페이지 이동 함수
 const changePage = async (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
-
-    // 검색 결과가 있을 경우, LolPlayerHistorySearch 컴포넌트를 통해 데이터를 가져옴
     if (searchQuery.value && lolPlayerHistorySearchResults.value.content.length > 0) {
-      emit("update:currentPage", page); // currentPage 변경을 하위 컴포넌트에 알림
-    } 
-    else {
-      // 검색 결과가 없으면 기존 방식으로 데이터 가져옴
+      emit("update:currentPage", page);
+    } else {
       await getPlayerHistory(page);
     }
   }
 };
 
-// 제목 저장 이벤트 핸들러
-const handleSave = async(newTitle: string, id: number) => {
+const handleSave = async (newTitle: string, id: number) => {
   const dto: LolPlayerHistoryUpdateRequestDto = {
     playerHistoryTitle: newTitle,
-  }
-  const response = await uFetch<LolPlayerHistoryUpdateRequestDto,ApiResponse<void>>(dto,`/game/lol/rift/playerHistory/${id}`,"PUT",true);
+  };
+  const response = await uFetch<LolPlayerHistoryUpdateRequestDto, ApiResponse<void>>(
+    dto,
+    `/game/lol/rift/playerHistory/${id}`,
+    'PUT',
+    true
+  );
   if (response.code === 200) {
     const updatedItem = displayedHistory.value.find(item => item.playerHistoryId === id);
     if (updatedItem) {
-      updatedItem.playerHistoryTitle = newTitle; // 수정된 제목 반영
+      updatedItem.playerHistoryTitle = newTitle;
     }
-    alert("수정에 성공 하였습니다") 
+    alert('수정에 성공하였습니다');
+  }
+};
+
+// 항목 선택 및 전체 선택
+const toggleItemSelection = (item: LolPlayerHistorySimpleDto) => {
+  const index = selectedItems.value.findIndex(selected => selected.playerHistoryId === item.playerHistoryId);
+  if (index === -1) {
+    selectedItems.value.push(item);
+  } else {
+    selectedItems.value.splice(index, 1);
+  }
+};
+
+const toggleSelectAll = (event: Event) => {
+  const isChecked = (event.target as HTMLInputElement).checked;
+  if (isChecked) {
+    selectedItems.value = [...displayedHistory.value];
+  } else {
+    selectedItems.value = [];
+  }
+};
+
+// 특정 항목이 선택되었는지 확인
+const isItemSelected = (item: LolPlayerHistorySimpleDto): boolean => {
+  return selectedItems.value.some(
+    (selected) => selected.playerHistoryId === item.playerHistoryId
+  );
+};
+
+
+const deleteSelectedItems = async () => {
+  if (selectedItems.value.length === 0) return;
+
+  if (confirm(`선택된 항목을 삭제하시겠습니까?`)) {
+    const response = await uFetch<LolPlayerHistorySimpleDto[], ApiResponse<void>>(
+      selectedItems.value,
+      "/game/lol/rift/playerHistory",
+      "DELETE",
+      true
+    );
+
+    if (response.code === 200) {
+      // 삭제 성공 시 selectedItems에 있는 항목들을 displayedHistory에서 제거
+      const deletedIds: number[] = selectedItems.value.map(item => item.playerHistoryId);
+
+      // displayedHistory에서 삭제된 항목을 필터링
+      lolPlayerHistoryResponseSimpleDtos.value = lolPlayerHistoryResponseSimpleDtos.value.filter(
+        item => !deletedIds.includes(item.playerHistoryId)
+      );
+
+      // 선택된 항목 초기화
+      selectedItems.value = [];
+
+      // 현재 페이지의 데이터가 모두 삭제된 경우 이전 페이지 데이터 가져오기
+      if (lolPlayerHistoryResponseSimpleDtos.value.length === 0 && currentPage.value > 1) {
+        currentPage.value -= 1; // 이전 페이지로 이동
+      }
+
+      // 이전 또는 현재 페이지 데이터 가져오기
+      await getPlayerHistory(currentPage.value);
+
+    }
   }
 };
 
 
 </script>
+
 
 <template>
   <div class="relative">
@@ -193,20 +253,39 @@ const handleSave = async(newTitle: string, id: number) => {
           />
         </div>
 
+        <!-- 전체 선택 및 삭제 버튼 -->
+        <div class="flex items-center mb-3">
+          <input
+            type="checkbox"
+            id="select-all"
+            class="mr-2"
+            @change="toggleSelectAll($event)"
+          />
+          <label for="select-all" class="text-sm">전체 선택</label>
+          <button
+            class="ml-auto px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+            @click="deleteSelectedItems"
+            :disabled="selectedItems.length === 0"
+          >
+            선택 삭제
+          </button>
+        </div>
+
         <!-- 히스토리 유무에 따라 다른 메시지 표시 -->
         <template v-if="displayedHistory.length > 0">
           <ul class="space-y-2">
             <li
               v-for="(item, index) in displayedHistory"
               :key="index"
-              class="flex items-center bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
+              class="flex items-center bg-gray-100 p-3 rounded hover:bg-gray-200 transition"
             >
-              <!-- 라디오 버튼 -->
+              <!-- 체크박스 -->
               <input
-                type="radio"
-                class="mr-4"
-                :value="item.playerHistoryId"
-                v-model="selectedItem"
+                type="checkbox"
+                class="mr-2"
+                :value="item"
+                :checked="isItemSelected(item)"
+                @change="toggleItemSelection(item)"
               />
 
               <!-- 히스토리 제목 -->
@@ -217,15 +296,14 @@ const handleSave = async(newTitle: string, id: number) => {
               >
                 {{ item.playerHistoryTitle }}
               </a>
-
               <!-- 수정 및 삭제 버튼 -->
               <div class="flex space-x-2">
                 <div>
                   <button
-                    class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    class="hover:opacity-80"
                     @click="openEditModal(item)"
                   >
-                    수정
+                  <svg-icon type="mdi" :path="mdilPencil" class="w-6 h-6 text-black"></svg-icon>
                   </button>
                   <LolPlayerHistoryUpdate
                     :visible="showModal"
@@ -236,10 +314,11 @@ const handleSave = async(newTitle: string, id: number) => {
                   />
                 </div>
                 <button
-                  class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  class="hover:opacity-80"
                   @click="deleteItem(item.playerHistoryId)"
                 >
-                  삭제
+                  <!-- 삭제 아이콘 -->
+                  <svg-icon type="mdi" :path="mdilDelete" class="w-6 h-6 text-black"></svg-icon>
                 </button>
               </div>
             </li>
@@ -270,19 +349,3 @@ const handleSave = async(newTitle: string, id: number) => {
     </div>
   </div>
 </template>
-
-
-
-<style scoped>
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
-a.truncate {
-  display: inline-block;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>
