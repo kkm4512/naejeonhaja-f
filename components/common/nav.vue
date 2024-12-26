@@ -140,14 +140,6 @@ const resultToggleDropdown = () => {
                   칼바람 나락
                 </a>
               </li>
-              <li>
-                <a
-                  href="/game/lol/tft"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  롤토체스
-                </a>
-              </li>
             </ul>
           </li>
           <span class="mx-2 w-px h-6 bg-white hidden md:inline-block"></span>
@@ -191,14 +183,6 @@ const resultToggleDropdown = () => {
                   class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   칼바람 나락
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/game/lol/tft/results"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  롤토체스
                 </a>
               </li>
             </ul>
