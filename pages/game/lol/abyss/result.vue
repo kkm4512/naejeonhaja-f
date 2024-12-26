@@ -21,14 +21,14 @@
         <div class="flex flex-col items-center">
           <span class="text-3xl font-bold text-blue-700">Team A</span>
           <span class="text-lg font-semibold text-blue-800">
-            Total MMR: {{ calculateTotalMMR(teamResponseDto.teamA || []) }}
+            Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamA || []) }}
           </span>
         </div>
         <span class="text-2xl font-extrabold text-gray-600">VS</span>
         <div class="flex flex-col items-center">
           <span class="text-3xl font-bold text-red-700">Team B</span>
           <span class="text-lg font-semibold text-red-800">
-            Total MMR: {{ calculateTotalMMR(teamResponseDto.teamB || []) }}
+            Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamB || []) }}
           </span>
         </div>
       </div>
@@ -48,7 +48,7 @@
             </div>
           <ul class="space-y-3">
             <li
-              v-for="(player, index) in teamResponseDto.teamA"
+              v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
             >
@@ -78,7 +78,7 @@
             </div>
           <ul class="space-y-3">
             <li
-              v-for="(player, index) in teamResponseDto.teamB"
+              v-for="(player, index) in lolTeamResponseDto.teamB"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
             >
@@ -96,13 +96,19 @@
         </div>
       </div>
 
-      <!-- 무승부 버튼 -->
-      <div class="mt-8 flex justify-center">
+      <!-- 무승부 버튼과 결과 복사하기 버튼 -->
+      <div class="mt-8 flex justify-center gap-4">
         <button
           @click="declareWinner('Draw')"
           class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
         >
           무승부
+        </button>
+        <button
+          @click="copyResults"
+          class="px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
+        >
+          결과 복사하기
         </button>
       </div>
 
@@ -153,7 +159,7 @@ import { useLolStore } from '~/stores/lol/useLolStore';
   const switchStore = useSwitchStore();
   const playerResultHistoryTitle = ref<string>("");
 
-  const teamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
+  const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.abyssTeamA,
     teamB: lolStore.abyssTeamB,
   })
@@ -162,12 +168,12 @@ import { useLolStore } from '~/stores/lol/useLolStore';
   // PlayerResultHistory
   const lolTeamResultRequestDtoA: Ref<LolTeamResultDto> = ref({
     outcome: null,
-    team: teamResponseDto.value.teamA
+    team: lolTeamResponseDto.value.teamA
   })
   
   const lolTeamResultRequestDtoB: Ref<LolTeamResultDto> = ref({
     outcome: null,
-    team: teamResponseDto.value.teamB
+    team: lolTeamResponseDto.value.teamB
   })
   
   const lolplayerResultHistoryRequestDto: Ref<LolPlayerResultHistoryRequestDto> = computed(() => ({
@@ -192,7 +198,37 @@ import { useLolStore } from '~/stores/lol/useLolStore';
       lolplayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
     }
   };
-  
+
+// 결과 복사 버튼 메서드
+const copyResults = () => {
+  // 데이터를 보기 좋게 포맷
+  const formatTeamData = (teamData: any) => {
+    return teamData.map((player: any) => {
+      return `
+- 소환사명: ${player.name}
+      `.trim(); // 개별 항목의 양 끝 공백 제거
+    }).join('\n'); // 결과를 줄바꿈으로 병합
+  };
+
+  const formattedResults = `
+Team A:
+${formatTeamData(lolTeamResponseDto.value.teamA)}
+
+Team B:
+${formatTeamData(lolTeamResponseDto.value.teamB)}
+  `.trim();
+
+  // 클립보드에 복사
+  navigator.clipboard
+    .writeText(formattedResults)
+    .then(() => {
+      alert('결과가 복사되었습니다!');
+    })
+    .catch((err) => {
+      console.error('복사 실패:', err);
+    });
+};
+
   // 이전으로 버튼 메서드
   const goBack = () => {
     switchStore.onAbyssGoBackedSwitch();

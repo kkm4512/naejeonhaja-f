@@ -1,172 +1,178 @@
 <template>
-    <div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 p-6">
-      <!-- 카드 전체 컨테이너 -->
-      <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-8">
-        <!-- 대전 내역 이름 -->
-        <div class="mb-6">
-          <label for="match-name" class="block text-xl font-semibold text-gray-800 mb-2">
-            대전 결과 이름
-          </label>
-          <input
-            id="match-name"
-            v-model="playerResultHistoryTitle"
-            type="text"
-            placeholder="저장할 대전 결과 이름을 기재하세요"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-          />
+  <div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 p-6">
+    <!-- 카드 전체 컨테이너 -->
+    <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-8">
+      <!-- 대전 내역 이름 -->
+      <div class="mb-6">
+        <label for="match-name" class="block text-xl font-semibold text-gray-800 mb-2">
+          대전 결과 이름
+        </label>
+        <input
+          id="match-name"
+          v-model="playerResultHistoryTitle"
+          type="text"
+          placeholder="저장할 대전 결과 이름을 기재하세요"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+        />
+      </div>
+
+      <!-- Team A vs Team B -->
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col items-center">
+          <span class="text-3xl font-bold text-blue-700">Team A</span>
+          <span class="text-lg font-semibold text-blue-800">
+            Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamA || []) }}
+          </span>
         </div>
-  
-        <!-- Team A vs Team B -->
-        <div class="flex justify-between items-center mb-8">
-          <div class="flex flex-col items-center">
-            <span class="text-3xl font-bold text-blue-700">Team A</span>
-            <span class="text-lg font-semibold text-blue-800">
-              Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamA || []) }}
-            </span>
-          </div>
-          <span class="text-2xl font-extrabold text-gray-600">VS</span>
-          <div class="flex flex-col items-center">
-            <span class="text-3xl font-bold text-red-700">Team B</span>
-            <span class="text-lg font-semibold text-red-800">
-              Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamB || []) }}
-            </span>
-          </div>
+        <span class="text-2xl font-extrabold text-gray-600">VS</span>
+        <div class="flex flex-col items-center">
+          <span class="text-3xl font-bold text-red-700">Team B</span>
+          <span class="text-lg font-semibold text-red-800">
+            Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamB || []) }}
+          </span>
         </div>
-  
-        <!-- 팀 멤버 리스트 -->
-        <div class="grid grid-cols-2 gap-6">
-          <!-- Team A -->
+      </div>
+
+      <!-- 팀 멤버 리스트 -->
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Team A -->
+        <div
+          class="relative p-6 rounded-xl shadow-lg transition"
+          :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
+        >
+          <!-- Winner/Lose/Draw 표시 -->
           <div
-            class="relative p-6 rounded-xl shadow-lg transition"
-            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
+            :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).class"
           >
-            <!-- Winner/Lose/Draw 표시 -->
-            <div
-              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).class"
-            >
-              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).text }}
-            </div>
-            <ul class="space-y-3">
-              <li
-                v-for="(player, index) in lolTeamResponseDto.teamA"
-                :key="index"
-                :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              >
-                <span class="text-sm font-bold text-blue-900">{{ player.name }}</span>
-                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-                <div class="flex gap-2 items-center">
-                  <div
-                    class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                    style="max-width: 80px;"
-                  >
-                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                  </div>
-                  <div
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded',
-                      player.mmrReduced
-                        ? 'bg-gray-300 text-gray-800'
-                        : 'bg-blue-300 text-blue-900'
-                    ]"
-                  >
-                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                  </div>
-                </div>
-              </li>
-            </ul>
-            <!-- Team A 승리 버튼 -->
-            <button
-              @click="declareWinner('TeamA')"
-              class="mt-4 w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
-            >
-              Team A 승리
-            </button>
+            {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).text }}
           </div>
-  
-          <!-- Team B -->
+          <ul class="space-y-3">
+            <li
+              v-for="(player, index) in lolTeamResponseDto.teamA"
+              :key="index"
+              :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+            >
+              <span class="text-sm font-bold text-blue-900">{{ player.name }}</span>
+              <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
+              <div class="flex gap-2 items-center">
+                <div
+                  class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
+                  style="max-width: 80px;"
+                >
+                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
+                </div>
+                <div
+                  :class="[
+                    'px-3 py-1 text-xs font-semibold rounded',
+                    player.mmrReduced
+                      ? 'bg-gray-300 text-gray-800'
+                      : 'bg-blue-300 text-blue-900'
+                  ]"
+                >
+                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
+                </div>
+              </div>
+            </li>
+          </ul>
+          <!-- Team A 승리 버튼 -->
+          <button
+            @click="declareWinner('TeamA')"
+            class="mt-4 w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
+          >
+            Team A 승리
+          </button>
+        </div>
+
+        <!-- Team B -->
+        <div
+          class="relative p-6 rounded-xl shadow-lg transition"
+          :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
+        >
+          <!-- Winner/Lose/Draw 표시 -->
           <div
-            class="relative p-6 rounded-xl shadow-lg transition"
-            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
+            :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).class"
           >
-            <!-- Winner/Lose/Draw 표시 -->
-            <div
-              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).class"
-            >
-              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).text }}
-            </div>
-            <ul class="space-y-3">
-              <li
-                v-for="(player, index) in lolTeamResponseDto.teamB"
-                :key="index"
-                :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              >
-                <span class="text-sm font-bold text-red-900">{{ player.name }}</span>
-                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-                <div class="flex gap-2 items-center">
-                  <div
-                    class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                    style="max-width: 80px;"
-                  >
-                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                  </div>
-                  <div
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded',
-                      player.mmrReduced
-                        ? 'bg-gray-300 text-gray-800'
-                        : 'bg-red-300 text-red-900'
-                    ]"
-                  >
-                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                  </div>
-                </div>
-              </li>
-            </ul>
-            <!-- Team B 승리 버튼 -->
-            <button
-              @click="declareWinner('TeamB')"
-              class="mt-4 w-full py-3 bg-red-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-red-700 hover:scale-105 transition"
-            >
-              Team B 승리
-            </button>
+            {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).text }}
           </div>
-        </div>
-  
-        <!-- 무승부 버튼 -->
-        <div class="mt-8 flex justify-center">
+          <ul class="space-y-3">
+            <li
+              v-for="(player, index) in lolTeamResponseDto.teamB"
+              :key="index"
+              :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+            >
+              <span class="text-sm font-bold text-red-900">{{ player.name }}</span>
+              <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
+              <div class="flex gap-2 items-center">
+                <div
+                  class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
+                  style="max-width: 80px;"
+                >
+                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
+                </div>
+                <div
+                  :class="[
+                    'px-3 py-1 text-xs font-semibold rounded',
+                    player.mmrReduced
+                      ? 'bg-gray-300 text-gray-800'
+                      : 'bg-red-300 text-red-900'
+                  ]"
+                >
+                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
+                </div>
+              </div>
+            </li>
+          </ul>
+          <!-- Team B 승리 버튼 -->
           <button
-            @click="declareWinner('Draw')"
-            class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
+            @click="declareWinner('TeamB')"
+            class="mt-4 w-full py-3 bg-red-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-red-700 hover:scale-105 transition"
           >
-            무승부
-          </button>
-        </div>
-  
-        <!-- 이전으로, 팀 다시 구성하기, 저장 버튼 -->
-        <div class="mt-6 flex justify-between gap-4">
-          <button
-            @click="goBack"
-            class="w-full px-6 py-3 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
-          >
-            이전으로
-          </button>
-          <button
-            @click="recomposeTeam"
-            class="w-full px-6 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
-          >
-            팀 다시 구성하기
-          </button>
-          <button
-            @click="saveTeam"
-            class="w-full px-6 py-3 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
-          >
-            저장
+            Team B 승리
           </button>
         </div>
       </div>
+
+      <!-- 무승부 버튼과 결과 복사하기 버튼 -->
+      <div class="mt-8 flex justify-center gap-4">
+        <button
+          @click="declareWinner('Draw')"
+          class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
+        >
+          무승부
+        </button>
+        <button
+          @click="copyResults"
+          class="px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
+        >
+          결과 복사하기
+        </button>
+      </div>
+
+      <!-- 이전으로, 팀 다시 구성하기, 저장 버튼 -->
+      <div class="mt-6 flex justify-between gap-4">
+        <button
+          @click="goBack"
+          class="w-full px-6 py-3 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
+        >
+          이전으로
+        </button>
+        <button
+          @click="recomposeTeam"
+          class="w-full px-6 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
+        >
+          팀 다시 구성하기
+        </button>
+        <button
+          @click="saveTeam"
+          class="w-full px-6 py-3 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
+        >
+          저장
+        </button>
+      </div>
     </div>
-    <LolFooter />
-  </template>
+  </div>
+  <LolFooter />
+</template>
     
   <script setup lang="ts">
   import LolFooter from '~/components/game/lol/LolFooter.vue';
@@ -227,6 +233,37 @@
       lolPlayerResultHistoryRequestDto.value.teamB.outcome = "DRAW";
     }
   };
+
+// 결과 복사 버튼 메서드
+const copyResults = () => {
+  // 데이터를 보기 좋게 포맷
+  const formatTeamData = (teamData: any) => {
+    return teamData.map((player: any) => {
+      return `
+- ${player.name} / ${player.lines[0].line}
+      `.trim();
+    }).join('\n');
+  };
+
+  const formattedResults = `
+Team A:
+${formatTeamData(lolTeamResponseDto.value.teamA)}
+
+Team B:
+${formatTeamData(lolTeamResponseDto.value.teamB)}
+  `.trim();
+
+  // 클립보드에 복사
+  navigator.clipboard
+    .writeText(formattedResults)
+    .then(() => {
+      alert('결과가 복사되었습니다!');
+    })
+    .catch((err) => {
+      console.error('복사 실패:', err);
+    });
+};
+
 
 
   // 이전으로 버튼 메서드
