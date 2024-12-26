@@ -189,6 +189,15 @@ const resultToggleDropdown = () => {
           </li>
           <span class="mx-2 w-px h-6 bg-white hidden md:inline-block"></span>
           <li>
+            <a
+              href="https://open.kakao.com/o/gKcd196g"
+              class="flex items-center py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+            >
+            문의
+          </a>
+          </li>
+          <span class="mx-2 w-px h-6 bg-white hidden md:inline-block"></span>
+          <li>
             <!-- 로그인/닉네임 표시 -->
             <a
               v-if="!jwt"
