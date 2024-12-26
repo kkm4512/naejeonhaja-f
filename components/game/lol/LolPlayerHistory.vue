@@ -3,10 +3,10 @@ import { ref, computed } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
 import type { LolPlayerHistorySimpleDto } from '~/types/game/lol/res/resLolDto';
 import LolPlayerHistorySearch from './LolPlayerHistorySearch.vue';
-import LolPlayerHistoryUpdate from './LolPlayerHistoryUpdate.vue';
 import type { LolPlayerHistoryUpdateRequestDto } from '~/types/game/lol/req/reqLolDto';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdilPencil, mdilDelete } from '@mdi/light-js';
+import LolPlayerHistoryAndResultUpdate from './LolPlayerHistoryAndResultUpdate.vue';
 
 const props = defineProps<{
   domain: string;
@@ -32,7 +32,7 @@ const rawDomain = cleanDomain(props.domain);
 
 const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistorySimpleDto[]>([]);
 const currentPage = ref(1);
-const totalPages = ref(0);
+const totalPages = ref(1);
 const searchQuery = ref(''); // 검색어 상태
 
 // 선택된 항목 관리
@@ -96,7 +96,7 @@ const getPlayerHistory = async (page: number) => {
 
 const deleteItem = async (playerHistoryId: number) => {
   if (confirm(`이 플레이어 내역을 삭제하시겠습니까?`)) {
-    const response = await uFetch<null, ApiResponse<void>>(null,`/game/lol/rift/playerHistory/${playerHistoryId}`,'DELETE',true);
+    const response = await uFetch<null, ApiResponse<void>>(null,`/game/lol/${rawDomain}/playerHistory/${playerHistoryId}`,'DELETE',true);
 
     if (response.code === 200) {
       // 삭제된 항목을 데이터에서 제거
@@ -133,7 +133,7 @@ const handleSave = async (newTitle: string, id: number) => {
   };
   const response = await uFetch<LolPlayerHistoryUpdateRequestDto, ApiResponse<void>>(
     dto,
-    `/game/lol/rift/playerHistory/${id}`,
+    `/game/lol/${rawDomain}/playerHistory/${id}`,
     'PUT',
     true
   );
@@ -177,12 +177,7 @@ const deleteSelectedItems = async () => {
   if (selectedItems.value.length === 0) return;
 
   if (confirm(`선택된 항목을 삭제하시겠습니까?`)) {
-    const response = await uFetch<LolPlayerHistorySimpleDto[], ApiResponse<void>>(
-      selectedItems.value,
-      "/game/lol/rift/playerHistory",
-      "DELETE",
-      true
-    );
+    const response = await uFetch<LolPlayerHistorySimpleDto[], ApiResponse<void>>(selectedItems.value,`/game/lol/${rawDomain}/playerHistory`,"DELETE",true);
 
     if (response.code === 200) {
       // 삭제 성공 시 selectedItems에 있는 항목들을 displayedHistory에서 제거
@@ -305,7 +300,7 @@ const deleteSelectedItems = async () => {
                   >
                   <svg-icon type="mdi" :path="mdilPencil" class="w-6 h-6 text-black"></svg-icon>
                   </button>
-                  <LolPlayerHistoryUpdate
+                  <LolPlayerHistoryAndResultUpdate
                     :visible="showModal"
                     :currentTitle="selectedTitle"
                     :currentId="selectedId"
