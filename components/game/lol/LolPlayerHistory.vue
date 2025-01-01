@@ -300,13 +300,6 @@ const deleteSelectedItems = async () => {
                   >
                   <svg-icon type="mdi" :path="mdilPencil" class="w-6 h-6 text-black"></svg-icon>
                   </button>
-                  <LolPlayerHistoryAndResultUpdate
-                    :visible="showModal"
-                    :currentTitle="selectedTitle"
-                    :currentId="selectedId"
-                    @update:visible="(value: boolean) => (showModal = value)"
-                    @save="handleSave"
-                  />
                 </div>
                 <button
                   class="hover:opacity-80"
@@ -318,7 +311,13 @@ const deleteSelectedItems = async () => {
               </div>
             </li>
           </ul>
-
+          <LolPlayerHistoryAndResultUpdate
+              :visible="showModal"
+              :currentTitle="selectedTitle"
+              :currentId="selectedId"
+              @update:visible="(value: boolean) => (showModal = value)"
+              @save="handleSave"
+            />
           <!-- 페이지 네비게이션 -->
           <div class="flex justify-between mt-4">
             <button
