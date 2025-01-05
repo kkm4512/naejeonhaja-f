@@ -154,7 +154,7 @@ export const getLines = (): Line[] => {
 
 export const getSampleNicknames = (): string[] => {
   return [
-    "Summoner1", "Summoner2", "Summoner3", "Summoner4", "Summoner5",
-    "Summoner6", "Summoner7", "Summoner8", "Summoner9", "Summoner10"
+    "동탄동82세엄준식#kr1", "d d#kr1", "hide ob bush#kr1", "엄준식#kr1", "q q#kr1",
+    "w w#kr1", "e e#kr1", "f f#kr1", "z z#kr1", "1234#kr1"
   ];
 }

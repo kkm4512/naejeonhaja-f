@@ -4,9 +4,10 @@ import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/ty
 import type { ApiResponse } from '~/types/common';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 import { useLolStore } from '~/stores/lol/useLolStore';
-import type { Line, LineRole, LolPlayerDto, Tier } from '~/types/game/lol/common';
+import { PlayerMode, type Line, type LineRole, type LolPlayerDto, type Tier } from '~/types/game/lol/common';
 import LolFooter from './LolFooter.vue';
 import LolPlayerHistory from './LolPlayerHistory.vue';
+import LolMenual from './LolMenual.vue';
 
 // Props
 const props = defineProps<{
@@ -20,14 +21,18 @@ const switchStore = useSwitchStore();
 const tiers: Tier[] = getTiers();
 const lines: Line[] = getLines();
 const saveData = ref(false);
+const isModalOpen = ref(false);
+// 플레이스홀더 값 상태
+const placeholderText = ref<string>('Player Nickname');
+// 현재 선택된 버튼을 추적하는 상태 변수
+const selectedButton = ref<PlayerMode>(PlayerMode.CASUAL);
 const lolPlayerDto = ref<LolPlayerDto[]>(
-  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],lines: [],mmr: 0, mmrReduced: false, }))
+  Array.from({ length: 10 }, () => ({name: "",tier: tiers[0],lines: [],mmr: 0, mmrReduced: false, errorMessage: ""  }))
 );
 const playerHistoryTitle = ref<string | null>("");
 const lolPlayerHistoryRequestDto: Ref<LolPlayerHistoryRequestDto> = computed(() => ({
   playerHistoryTitle: playerHistoryTitle.value,
   lolPlayerDtos: lolPlayerDto.value,
-
 }));
  
 onMounted(async() => {
@@ -38,19 +43,66 @@ onMounted(async() => {
     return;
   }
   if (props.id) {
-    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/rift/playerHistory/detail/${props.id}`,"GET", true);
-    playerHistoryTitle.value = response.data.playerHistoryTitle;
-    lolPlayerDto.value = response.data.playerDtos.map(p => ({
-      ...p,
-      mmrReduced: false,
-      mmr: 0,
-    }))
-  }
+  const response = await uFetch<null, ApiResponse<LolPlayerHistoryResponseDetailDto>>(
+    null, 
+    `/game/lol/rift/playerHistory/detail/${props.id}`, 
+    "GET", 
+    true
+  );
+
+  playerHistoryTitle.value = response.data.playerHistoryTitle;
+
+  // 기존 배열의 크기를 맞춘 후, 기존 배열의 각 요소를 업데이트
+  response.data.playerDtos.forEach((p, index) => {
+    lolPlayerDto.value[index].name = p.name;
+    lolPlayerDto.value[index].lines = p.lines;
+    lolPlayerDto.value[index].tier = p.tier;
+    lolPlayerDto.value[index].mmrReduced = false;
+    lolPlayerDto.value[index].mmr = 0;
+  });
+
+  // 기존 데이터가 더 많을 경우 남은 데이터를 제거
+  lolPlayerDto.value.splice(response.data.playerDtos.length);
+}
+
 })
 
-
-
 // 메서드
+
+// Riot API 호출 함수 (비동기)
+const fetchPlayerData = async (playerName: string) => {
+  if (selectedButton.value === PlayerMode.CASUAL) return;
+  const encodedPlayerName = encodeURIComponent(playerName);
+if (!playerName) return;
+  const response = await uFetch<null, ApiResponse<void>>(null, `/game/lol/riot/${encodedPlayerName}`, 'GET');
+  // 성공 후 데이터를 플레이어 데이터에 반영 (예: mmr 업데이트)
+  const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
+  if (response.code === 404) {
+    lolPlayerDto.value[playerIndex].errorMessage = response.message;
+    lolPlayerDto.value[playerIndex].successMessage = "";
+  }
+  else {
+    lolPlayerDto.value[playerIndex].successMessage = response.message;
+    lolPlayerDto.value[playerIndex].errorMessage = "";
+  }
+};
+
+
+const debouncedFetchPlayerData = debounce(fetchPlayerData, 1000);
+
+// 진지 모드일때만 실행되게 하기
+lolPlayerDto.value.forEach((player) => {
+  watchEffect(() => {
+    if (player.name.trim() !== "") {
+      debouncedFetchPlayerData(player.name);
+    } else if (player.name === "") {
+      player.errorMessage = "";
+      player.successMessage = "";
+    }
+  }, { flush: 'post' });
+});
+
+
 
 // 역할 업데이트 함수
 const updatelines = (player: LolPlayerDto, line: Line, type: LineRole): void => {
@@ -75,6 +127,21 @@ const updatelines = (player: LolPlayerDto, line: Line, type: LineRole): void => 
 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
+  if (selectedButton.value === PlayerMode.SERIOUS) {
+    let isOk = true;
+    // 플레이어 전부 인증된 플레이언지 확인
+    lolPlayerDto.value.forEach(p => {
+      console.log("p.errorMessage : " + p.errorMessage);
+      if (p.errorMessage) {
+        isOk = false
+        return;
+      }
+    })
+    if (!isOk) {
+      alert("유효하지 않은 플레이어가 존재합니다")
+      return;
+    }
+  }
   // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
   lolStore.setInitRiftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
@@ -83,9 +150,33 @@ const sendToServer = async () => {
   ? await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift/playerHistory","POST",true) 
   : await uFetch<LolPlayerHistoryRequestDto,ApiResponse<LolTeamResponseDto>>(lolPlayerHistoryRequestDto.value, "/game/lol/rift","POST",false)
   lolStore.updateRiftTeams(response.data.teamA,response.data.teamB);
-  router.push("/game/lol/rift/result")
+  if (selectedButton.value === PlayerMode.CASUAL) {
+    router.push("/game/lol/rift/result/casual")
+  } 
+  else {
+    router.push("/game/lol/rift/result/serious")
+  }
+  
 };
 
+function handleCasual(): void {
+  selectedButton.value = PlayerMode.CASUAL;
+  placeholderText.value = 'Player Nickname'; // 기본 플레이스홀더
+}
+
+function handleSerious(): void {
+  selectedButton.value = PlayerMode.SERIOUS;
+  placeholderText.value = 'Player Nickname#kr1'; // 진지 모드 플레이스홀더
+  lolPlayerDto.value.forEach(p => {
+    if (p.name !== "" && p.errorMessage === "" && p.successMessage === "") {
+      fetchPlayerData(p.name);
+    }
+  })
+}
+// 사용설명서 버튼 클릭 메서드
+function handleHelp(): void {
+  isModalOpen.value = true; // 모달 열기
+}
 </script>
 
 <template>
@@ -94,13 +185,66 @@ const sendToServer = async () => {
       <!-- 소환사의 협곡 메인 콘텐츠 -->
       <div class="flex-1 bg-white shadow-lg rounded-lg p-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">소환사의 협곡</h1>
-        <!-- 랜덤 데이터 생성 버튼 -->
-        <div class="flex justify-center">
-          <button 
-            @click="generateRandomData(playerHistoryTitle,lolPlayerDto);"
-            class="mb-6 px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition">
-            랜덤 데이터 생성
-          </button>
+          <div class="flex justify-end items-center mr-5">
+            <!-- 사용설명서 버튼 -->
+            <button
+              @click="handleHelp"
+              class="mb-6 px-4 py-2 bg-yellow-400 text-black rounded-md shadow hover:bg-yellow-500"
+            >
+              사용설명서
+            </button>
+          </div>
+        <div class="flex justify-between items-center">
+          <div>
+            <!-- 모달: LolMenual 컴포넌트 -->
+            <div
+              v-if="isModalOpen"
+              class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-25 z-50"
+            >
+              <div class="bg-white rounded-lg p-6 w-96 shadow-lg relative">
+                <!-- LolMenual 컴포넌트 -->
+                <LolMenual :is-modal-open="true" v-on:update:is-modal-open="isModalOpen = false"/>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center space-x-4">
+          <!-- 대충 버튼 -->
+          <div class="relative group">
+            <button
+              @click="handleCasual"
+              class="mb-6 px-4 py-2 rounded-md shadow transition"
+              :class="selectedButton === 'casual' ? 'bg-blue-500 text-white' : 'bg-gray-400 text-black hover:bg-gray-500'"
+            >
+              대충
+            </button>
+            <!-- Tooltip -->
+            <div
+              class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-sm text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition whitespace-nowrap"
+            >
+              가벼운 내전 목적 (플레이어들의 실제 정보를 라이엇으로부터 가져오지않음)
+            </div>
+          </div>
+
+          <!-- 진지 버튼 -->
+          <div class="relative group">
+            <button
+              @click="handleSerious"
+              class="mb-6 px-4 py-2 rounded-md shadow transition"
+              :class="selectedButton === 'serious' ? 'bg-blue-500 text-white' : 'bg-gray-400 text-black hover:bg-gray-500'"
+            >
+              진지
+            </button>
+            <!-- Tooltip -->
+            <div
+              class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-sm text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition whitespace-nowrap"
+            >
+            진지한 내전 목적 (플레이어들의 실제 정보를 라이엇으로부터 가져옴)<br />
+            ※ 플레이어의 닉네임 + 태그를 정확히 입력해야함 <br />
+            ※ 태그는 생략하면 #kr1로 자동 인식합니다
+            </div>
+          </div>
+        </div>
+
         </div>
 
         <!-- 대전 이름 입력 섹션 -->
@@ -120,7 +264,6 @@ const sendToServer = async () => {
         <!-- 팀 정보 -->
         <div class="w-full bg-white shadow-lg rounded-lg p-6">
           <h2 class="text-2xl font-semibold text-center bg-teal-400 text-white py-3 rounded-md mb-6">Team Info</h2>
-
           <!-- 플레이어 목록 -->
           <div class="flex justify-between">
             <!-- 왼쪽 열 -->
@@ -132,11 +275,22 @@ const sendToServer = async () => {
                   class="p-3 bg-gray-100 border border-gray-300 rounded-md"
                 >
                   <div class="flex items-center justify-between">
+                    <!-- 입력 사항 반응형으로 안되는 문제 해결하기 -->
                     <input
-                      v-model="player.name"
+                      v-model ="player.name"
                       class="border border-gray-300 rounded-md p-1 bg-white text-sm w-1/3"
-                      placeholder="Player Nickname"
+                      :placeholder="placeholderText"
                     />
+                    <div class="flex items-center space-x-2">
+                      <!-- 성공 메시지 -->
+                      <div v-if="player.successMessage && selectedButton === PlayerMode.SERIOUS" class="text-green-500 text-sm">
+                        {{ player.successMessage }}
+                      </div>
+                      <!-- 에러 메시지 -->
+                      <div v-if="player.errorMessage && selectedButton === PlayerMode.SERIOUS" class="text-red-500 text-sm">
+                        {{ player.errorMessage }}
+                      </div>
+                    </div>
                     <select v-model="player.tier" class="border border-gray-300 rounded-md p-1 bg-white text-sm w-1/3">
                       <option v-for="tier in tiers" :key="tier" :value="tier">{{ tier }}</option>
                     </select>
@@ -185,8 +339,18 @@ const sendToServer = async () => {
                     <input
                       v-model="player.name"
                       class="border border-gray-300 rounded-md p-1 bg-white text-sm w-1/3"
-                      placeholder="Player Nickname"
+                      :placeholder="placeholderText"
                     />
+                    <div class="flex items-center space-x-2">
+                      <!-- 성공 메시지 -->
+                      <div v-if="player.successMessage && selectedButton === PlayerMode.SERIOUS" class="text-green-500 text-sm">
+                        {{ player.successMessage }}
+                      </div>
+                      <!-- 에러 메시지 -->
+                      <div v-if="player.errorMessage && selectedButton === PlayerMode.SERIOUS" class="text-red-500 text-sm">
+                        {{ player.errorMessage }}
+                      </div>
+                    </div>                    
                     <select v-model="player.tier" class="border border-gray-300 rounded-md p-1 bg-white text-sm w-1/3">
                       <option v-for="tier in tiers" :key="tier" :value="tier">{{ tier }}</option>
                     </select>
@@ -240,9 +404,9 @@ const sendToServer = async () => {
                 class="form-checkbox h-5 w-5 text-orange-500 rounded"
               />
               <span class="ml-2 text-gray-700 text-sm">데이터 저장</span>
-            </label>            
+            </label>
           </div>
-        </div>        
+        </div>
       </div>
       <!-- 팀 히스토리 박스 -->
       <LolPlayerHistory class="ml-10 whitespace-nowrap" domain="'rift'"/>
