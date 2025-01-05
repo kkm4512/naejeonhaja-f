@@ -27,9 +27,17 @@ export type Tier =
     lines?: Lines[] | null;
     mmr: number;
     mmrReduced?: boolean;
+    errorMessage?: string;
+    successMessage?: string;
   };
 
   export type LolTeamResultDto = {
     outcome: Outcome;
     team: LolPlayerDto[];
   }
+
+  export enum PlayerMode {
+    CASUAL = 'casual',
+    SERIOUS = 'serious'
+  }
+  

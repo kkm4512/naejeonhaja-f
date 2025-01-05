@@ -88,6 +88,7 @@ const getPlayerHistory = async (page: number) => {
     'GET',
     true
   );
+  console.log(response);
   if (response && response.data) {
     lolPlayerHistoryResponseSimpleDtos.value = response.data.content;
     totalPages.value = response.data.page.totalPages;
