@@ -12,4 +12,11 @@ export const debounce = (func: Function, delay: number) => {
       }, delay);
     };
   }
+
+  export const getPlayerName = (name:string | undefined) => {
+    if (name?.includes('#')) {
+        return name.split('#')[0];
+    }
+    return name;
+  };
   

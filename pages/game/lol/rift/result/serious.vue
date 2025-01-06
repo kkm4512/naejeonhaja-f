@@ -51,8 +51,10 @@
               v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+              @mouseover="handleMouseOver(player,$event)"
+              @mouseleave="handleMouseLeave()"
             >
-              <span class="text-sm font-bold text-blue-900">{{ player.name }}</span>
+              <span class="text-sm font-bold text-blue-900">{{ getPlayerName(player.name) }}</span>
               <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
               <div class="flex gap-2 items-center">
                 <div
@@ -99,6 +101,8 @@
               v-for="(player, index) in lolTeamResponseDto.teamB"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+              @mouseover="handleMouseOver(player, $event)"
+              @mouseleave="handleMouseLeave()"              
             >
               <span class="text-sm font-bold text-red-900">{{ player.name }}</span>
               <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
@@ -171,15 +175,19 @@
       </div>
     </div>
   </div>
+  <div v-if="isModalOpen">
+    <LolSeriousPlayerDetail :player="hoveredPlayer" :position="modalPosition" />
+  </div>
   <LolFooter />
 </template>
     
   <script setup lang="ts">
   import LolFooter from '~/components/game/lol/LolFooter.vue';
+  import LolSeriousPlayerDetail from '~/components/game/lol/LolSeriousPlayerDetail.vue';
   import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
-  import type { LolTeamResultDto } from '~/types/game/lol/common';
+  import type { LolPlayerDto, LolTeamResultDto } from '~/types/game/lol/common';
   import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
 
@@ -193,6 +201,9 @@
   const winner = ref<string>("");
   const switchStore = useSwitchStore();
   const playerResultHistoryTitle = ref<string>("");
+  const hoveredPlayer = ref<LolPlayerDto | null>(null);
+  const isModalOpen = ref<boolean>(false);
+  const modalPosition = ref({ x: 0, y: 0 });
 
   const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
@@ -219,6 +230,21 @@
 )
   
   // 메서드
+
+  const handleMouseOver = (player: LolPlayerDto, event: MouseEvent) => {
+    hoveredPlayer.value = player;
+    modalPosition.value = {
+        x: event.clientX + 10, // 마우스 위치 기준 약간 오른쪽
+        y: event.clientY + 10  // 마우스 위치 기준 약간 아래쪽
+    };
+    isModalOpen.value = true;
+};
+
+  const handleMouseLeave = () => {
+      hoveredPlayer.value = null;
+      isModalOpen.value = false;
+  };
+
   const declareWinner = (team: string) => {
     winner.value = team; // 승리한 팀 설정
     
