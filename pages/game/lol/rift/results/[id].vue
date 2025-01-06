@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import LolFooter from '~/components/game/lol/LolFooter.vue';
 import type { ApiResponse } from '~/types/common';
-import type { LolPlayerResultHistoryResponseDetailDto } from '~/types/game/lol/res/resLolDto';
+import type { LolPlayerResultHistoryDto } from '~/types/game/lol/res/resLolDto';
 
 // 데이터
 const route = useRoute();
 const id = route.params.id;
 
 // 대전결과 상세 정보 가져오기
-const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryResponseDetailDto>>(null,`/game/lol/rift/playerResultHistory/detail/${id}`,"GET",true)
+const response = await uFetch<null,ApiResponse<LolPlayerResultHistoryDto>>(null,`/game/lol/rift/playerResultHistory/detail/${id}`,"GET",true)
 </script>
 
 <template>

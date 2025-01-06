@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { LolPlayerHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
-import type { LolPlayerHistoryResponseDetailDto, LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
+import type { LolPlayerHistoryDto, LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
 import type { ApiResponse } from '~/types/common';
 import { useSwitchStore } from '~/stores/lol/useSwitchStore';
 import { useLolStore } from '~/stores/lol/useLolStore';
@@ -36,7 +36,7 @@ onMounted(async() => {
     return;
   }
   if (props.id) {
-    const response = await uFetch<null,ApiResponse<LolPlayerHistoryResponseDetailDto>>(null,`/game/lol/abyss/playerHistory/detail/${props.id}`,"GET", true);
+    const response = await uFetch<null,ApiResponse<LolPlayerHistoryDto>>(null,`/game/lol/abyss/playerHistory/detail/${props.id}`,"GET", true);
     playerHistoryTitle.value = response.data.playerHistoryTitle;
     lolPlayerDto.value = response.data.playerDtos.map(p => ({
       ...p,
