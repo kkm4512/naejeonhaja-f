@@ -74,7 +74,7 @@ const fetchPlayerData = async (playerName: string) => {
   if (selectedButton.value === PlayerMode.CASUAL) return;
   const encodedPlayerName = encodeURIComponent(playerName);
 if (!playerName) return;
-  const response = await uFetch<null, ApiResponse<void>>(null, `/game/lol/riot/${encodedPlayerName}`, 'GET');
+  const response = await uFetch<null, ApiResponse<void>>(null, `/game/lol/riot/playerName/${encodedPlayerName}`, 'GET');
   // 성공 후 데이터를 플레이어 데이터에 반영 (예: mmr 업데이트)
   const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
   if (response.code === 404) {
@@ -131,7 +131,9 @@ const sendToServer = async () => {
     let isOk = true;
     // 플레이어 전부 인증된 플레이언지 확인
     lolPlayerDto.value.forEach(p => {
-      console.log("p.errorMessage : " + p.errorMessage);
+      if (!p.name.includes('#')) {
+        p.name += "#kr1";
+      }
       if (p.errorMessage) {
         isOk = false
         return;
@@ -143,6 +145,7 @@ const sendToServer = async () => {
     }
   }
   // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
+  console.log(lolPlayerDto.value)
   lolStore.setInitRiftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
   switchStore.offRiftGoBackedSwitch();
