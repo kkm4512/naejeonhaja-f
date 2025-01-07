@@ -8,5 +8,5 @@ export type LolRankType = {
 export type RiotPlayerDto = {
     riotAccountDto:RiotAccountDto,
     riotSummonerDto:RiotSummonerDto,
-    riotLeagueDtos:RiotLeagueDto[]
+    riotLeagueDto:RiotLeagueDto
 }

@@ -28,3 +28,33 @@ export type RiotLeagueDto = {
     hotStreak: boolean;    // 현재 연승 중인지 여부
 };
 
+export type RiotChampionMasteryDto = {
+    puuid: string;
+    championId: number;
+    championLevel: number;
+    championPoints: number;
+    lastPlayTime: number;
+    championPointsSinceLastLevel: number;
+    championPointsUntilNextLevel: number;
+    markRequiredForNextLevel: number;
+    tokensEarned: number;
+    championSeasonMilestone: number;
+    milestoneGrades: string[];
+    nextSeasonMilestone?: NextSeasonMilestoneDto; // 선택적으로 선언 (nullable 가능성)
+}
+
+export type NextSeasonMilestoneDto = {
+    requireGradeCounts: Record<string, number>; // Java의 Map -> TS에서는 Record로 매핑
+    rewardMarks: number;
+    bonus: boolean;
+    rewardConfig?: RewardConfigDto; // 선택적으로 선언
+    totalGamesRequires: number;
+}
+
+export type RewardConfigDto = {
+    rewardValue: string;
+    rewardType: string;
+    maximumReward: number;
+}
+
+

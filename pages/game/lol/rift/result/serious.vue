@@ -104,7 +104,7 @@
               @mouseover="handleMouseOver(player, $event)"
               @mouseleave="handleMouseLeave()"              
             >
-              <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name)  }}</span>
+              <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name) }}</span>
               <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
               <div class="flex gap-2 items-center">
                 <div

@@ -142,9 +142,9 @@ export const getTiers = (): Tier[] => {
     "PLATINUM_IV", "PLATINUM_III", "PLATINUM_II", "PLATINUM_I",
     "EMERALD_IV", "EMERALD_III", "EMERALD_II", "EMERALD_I",
     "DIAMOND_IV", "DIAMOND_III", "DIAMOND_II", "DIAMOND_I",
-    "MASTER",
-    "GRANDMASTER",
-    "CHALLENGER"
+    "MASTER_I",
+    "GRANDMASTER_I",
+    "CHALLENGER_I"
   ];
 }
 

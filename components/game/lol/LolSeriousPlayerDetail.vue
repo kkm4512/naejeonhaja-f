@@ -1,7 +1,7 @@
 <template>
     <div 
         class="fixed z-50"
-        :style="{ top: `${position.y}px`, left: `${position.x}px` }"
+        :style="{ top: `${100}px`, right: `${50}px` }"
     >
         <!-- 모달창 -->
         <div 
@@ -19,26 +19,39 @@
             
             <!-- 본문 -->
             <p class="text-lg text-white font-semibold leading-relaxed">
-                MMR: <span class="text-yellow-300 font-bold">{{ player?.mmr }}</span>
+                소환사 레벨: <span class="text-yellow-300 font-bold">{{ riotPlayerDto?.riotSummonerDto?.summonerLevel }}</span>
             </p>
+
+            <!-- 승패 비율을 원형 그래프 (예: donut chart) -->
+            <div class="mt-6 flex justify-center">
+                <canvas id="winLossChart" width="200" height="200"></canvas>
+            </div>
+            
+            <!-- 챔피언 정보 보여주는 곳 -->
+            <div class="mt-6 grid grid-cols-3 gap-4">
+                <div 
+                    v-for="champion in championDtos" 
+                    :key="champion.id"
+                    class="text-center"
+                >
+                    <!-- 챔피언 이미지 -->
+                    <img 
+                        :src="`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion.image.full}`" 
+                        :alt="champion.name" 
+                        class="w-16 h-16 rounded-full border-2 border-white"
+                    />
+                    <!-- 챔피언 이름 -->
+                    <p class="text-white font-semibold mt-2">{{ champion.name }}</p>
+                </div>
+            </div>           
 
             <!-- 추가 정보 섹션 -->
             <div class="mt-4 p-4 bg-white rounded-lg shadow-md">
                 <p class="text-gray-800 font-semibold">랭크 정보</p>
                 <ul class="mt-2 space-y-2">
-                    <li class="text-gray-700">🏆 티어: <span class="font-bold">{{ riotPlayerDto?.riotLeagueDtos[0]?.tier }}</span></li>
-                    <li class="text-gray-700">📈 승점: <span class="font-bold">{{ riotPlayerDto?.riotLeagueDtos[0]?.leaguePoints }}</span></li>
-                    <li class="text-gray-700">🎯 승/패: <span class="font-bold">{{ riotPlayerDto?.riotLeagueDtos[0]?.wins }}W / {{ riotPlayerDto?.riotLeagueDtos[0]?.losses }}L</span></li>
+                    <li class="text-gray-700">🏆 티어: <span class="font-bold">{{ riotPlayerDto?.riotLeagueDto?.tier + '_' + riotPlayerDto?.riotLeagueDto?.rank  }}</span></li>
+                    <li class="text-gray-700">📈 포인트: <span class="font-bold">{{ riotPlayerDto?.riotLeagueDto?.leaguePoints }}p</span></li>
                 </ul>
-            </div>
-
-            <!-- 닫기 버튼 -->
-            <div class="mt-6 flex justify-center">
-                <button 
-                    class="px-6 py-2 bg-white text-indigo-700 font-semibold rounded-lg shadow-lg hover:bg-indigo-500 hover:text-white transition-all duration-300 ease-in-out"
-                >
-                    자세히 보기
-                </button>
             </div>
         </div>
     </div>
@@ -49,7 +62,9 @@
 import type { ApiResponse } from '~/types/common';
 import type { LolPlayerDto } from '~/types/game/lol/common';
 import type { RiotPlayerDto } from '~/types/game/riot/common';
-import type { RiotAccountDto, RiotLeagueDto, RiotSummonerDto } from '~/types/game/riot/res/resRiotDto';
+import Chart from 'chart.js/auto';
+import type { RiotAccountDto, RiotChampionMasteryDto, RiotLeagueDto, RiotSummonerDto } from '~/types/game/riot/res/resRiotDto';
+import type { ChampionDto } from '~/types/game/dataDragon/res/resDataDragonDto';
 const props = defineProps<{ 
     player: LolPlayerDto | null,
     position: { x: number, y: number },
@@ -57,6 +72,7 @@ const props = defineProps<{
 
 
 const riotPlayerDto = ref<RiotPlayerDto>();
+const championDtos = ref<ChampionDto[]>([]);
 // API 호출 및 캐싱 로직
 const fetchPlayerData = async (playerName: string) => {
     try {
@@ -64,7 +80,7 @@ const fetchPlayerData = async (playerName: string) => {
 
         const accountResponse = await uFetch<null, ApiResponse<RiotAccountDto>>(
             null, 
-            `/game/lol/riot/playerName/${encodedPlayerName}?includeData=true`,
+            `/game/lol/riot/playerName/${encodedPlayerName}`,
             "GET"
         );
         
@@ -78,7 +94,7 @@ const fetchPlayerData = async (playerName: string) => {
 
             if (summonerResponse.code === 200) {
                 const riotSummonerDto = summonerResponse.data;
-                const leagueResponse = await uFetch<null, ApiResponse<RiotLeagueDto[]>>(
+                const leagueResponse = await uFetch<null, ApiResponse<RiotLeagueDto>>(
                     null, 
                     `/game/lol/riot/leagueId/${encodeURIComponent(riotSummonerDto.id)}`,
                     "GET"
@@ -88,8 +104,21 @@ const fetchPlayerData = async (playerName: string) => {
                     riotPlayerDto.value = {
                         riotAccountDto: accountResponse?.data,
                         riotSummonerDto: summonerResponse.data,
-                        riotLeagueDtos: leagueResponse.data
+                        riotLeagueDto: leagueResponse.data
                     };
+                    const championMasteryResponses = await uFetch<null, ApiResponse<RiotChampionMasteryDto[]>>(
+                        null, 
+                        `/game/lol/riot/puuid/${riotAccountDto.puuid}/champion`,
+                        "GET"
+                    );
+                    if (championMasteryResponses.code === 200) {
+                        for ( let i=0; i< championMasteryResponses.data.length; i++) {
+                            const championId = championMasteryResponses.data[i].championId;
+                            const championResponse = await uFetch<null, ApiResponse<ChampionDto>>(null,`/game/lol/dataDragon/championId/${championId}`,"GET")
+                            console.log(championResponse.data)
+                            championDtos.value?.push(championResponse.data);
+                        }
+                    }
                 }
             }
         }
@@ -99,11 +128,66 @@ const fetchPlayerData = async (playerName: string) => {
     return null;
 };
 
-// watchEffect에서 캐시 활용
+let winLossChartInstance: Chart | null = null;
+
 watchEffect(async () => {
     if (props.player?.name) {
         await fetchPlayerData(props.player.name);
     }
+
+    if (riotPlayerDto.value) {
+        const ctx = document.getElementById('winLossChart') as HTMLCanvasElement;
+
+        // 기존 차트 제거 (중복 방지)
+        if (winLossChartInstance) {
+            winLossChartInstance.destroy();
+        }
+
+        // 새로운 차트 생성
+        winLossChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Wins', 'Losses','승률'],
+                datasets: [{
+                    label: 'Win/Loss Ratio',
+                    data: [riotPlayerDto.value.riotLeagueDto.wins, riotPlayerDto.value.riotLeagueDto.losses],
+                    backgroundColor: ['#4CAF50', '#FF6384'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            // ✅ 커스텀 라벨 추가 (Wins:26 / Losses:6)
+                            generateLabels: (chart) => {
+                                const data = chart.data.datasets[0].data;
+                                return [
+                                    {
+                                        text: `Wins: ${data[0]}`,
+                                        fillStyle: '#4CAF50',
+                                        strokeStyle: '#4CAF50',
+                                        lineWidth: 2
+                                    },
+                                    {
+                                        text: `Losses: ${data[1]}`,
+                                        fillStyle: '#FF6384',
+                                        strokeStyle: '#FF6384',
+                                        lineWidth: 2
+                                    }
+                                ];
+                            },
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 });
+
+
 
 </script>

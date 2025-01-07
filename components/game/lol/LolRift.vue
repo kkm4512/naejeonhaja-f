@@ -8,6 +8,7 @@ import { PlayerMode, type Line, type LineRole, type LolPlayerDto, type Tier } fr
 import LolFooter from './LolFooter.vue';
 import LolPlayerHistory from './LolPlayerHistory.vue';
 import LolMenual from './LolMenual.vue';
+import type { RiotAccountDto, RiotLeagueDto, RiotSummonerDto } from '~/types/game/riot/res/resRiotDto';
 
 // Props
 const props = defineProps<{
@@ -73,19 +74,31 @@ onMounted(async() => {
 const fetchPlayerData = async (playerName: string) => {
   if (selectedButton.value === PlayerMode.CASUAL) return;
   const encodedPlayerName = encodeURIComponent(playerName);
-if (!playerName) return;
-  const response = await uFetch<null, ApiResponse<void>>(null, `/game/lol/riot/playerName/${encodedPlayerName}`, 'GET');
-  // 성공 후 데이터를 플레이어 데이터에 반영 (예: mmr 업데이트)
-  const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
-  if (response.code === 404) {
-    lolPlayerDto.value[playerIndex].errorMessage = response.message;
-    lolPlayerDto.value[playerIndex].successMessage = "";
-  }
-  else {
-    lolPlayerDto.value[playerIndex].successMessage = response.message;
-    lolPlayerDto.value[playerIndex].errorMessage = "";
-  }
-};
+  if (!playerName) return;
+    const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
+    const riotAccoutResponse = await uFetch<null, ApiResponse<RiotAccountDto>>(null, `/game/lol/riot/playerName/${encodedPlayerName}`, 'GET');
+    if (riotAccoutResponse.code === 404) {
+      lolPlayerDto.value[playerIndex].errorMessage = riotAccoutResponse.message;
+      lolPlayerDto.value[playerIndex].successMessage = "";
+    }
+    else {
+      lolPlayerDto.value[playerIndex].successMessage = riotAccoutResponse.message;
+      lolPlayerDto.value[playerIndex].errorMessage = "";
+    }
+    if (riotAccoutResponse.code === 200) {
+      const riotSummonerResponse = await uFetch<null, ApiResponse<RiotSummonerDto>>(null, `/game/lol/riot/puuid/${riotAccoutResponse.data.puuid}`, 'GET');
+      if (riotSummonerResponse.code === 200) {
+        const encodedLeagueId = encodeURIComponent(riotSummonerResponse.data.id);
+        const riotLeagueResponse = await uFetch<null, ApiResponse<RiotLeagueDto>>(null, `/game/lol/riot/leagueId/${encodedLeagueId}`, 'GET');
+        if (!riotLeagueResponse.data) {
+          lolPlayerDto.value[playerIndex].tier = "UNRANKED";
+          return;
+        }
+        lolPlayerDto.value[playerIndex].tier = parseTier(riotLeagueResponse.data.tier,riotLeagueResponse.data.rank);
+      }
+    }
+
+  };
 
 
 const debouncedFetchPlayerData = debounce(fetchPlayerData, 1000);
@@ -145,7 +158,6 @@ const sendToServer = async () => {
     }
   }
   // 초기 플레이어 히스토리 저장 (이전으로 버튼 눌렀을떄 나오게 하기 위함)
-  console.log(lolPlayerDto.value)
   lolStore.setInitRiftTeamsWithTitle(lolPlayerHistoryRequestDto.value);
   // 다시 확인버튼누르면 True로 바꿈
   switchStore.offRiftGoBackedSwitch();

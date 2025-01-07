@@ -16,6 +16,7 @@
     "@nuxtjs/sitemap": "^7.0.0",
     "@pinia/nuxt": "^0.8.0",
     "@vercel/analytics": "^1.4.1",
+    "chart.js": "^4.4.7",
     "jwt-decode": "^4.0.0",
     "nuxt": "^3.14.1592",
     "nuxt-simple-sitemap": "^4.4.1",
