@@ -51,7 +51,7 @@
               v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              @mouseover="handleMouseOver(player,$event)"
+              @mouseover="delayedMouseOver(player,$event)"
               @mouseleave="handleMouseLeave()"
             >
               <span class="text-sm font-bold text-blue-900">{{ getPlayerName(player.name) }}</span>
@@ -101,7 +101,7 @@
               v-for="(player, index) in lolTeamResponseDto.teamB"
               :key="index"
               :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              @mouseover="handleMouseOver(player, $event)"
+              @mouseover="delayedMouseOver(player, $event)"
               @mouseleave="handleMouseLeave()"              
             >
               <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name) }}</span>
@@ -204,6 +204,7 @@
   const hoveredPlayer = ref<LolPlayerDto | null>(null);
   const isModalOpen = ref<boolean>(false);
   const modalPosition = ref({ x: 0, y: 0 });
+  const hoverTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
   const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
@@ -239,6 +240,14 @@
     };
     isModalOpen.value = true;
 };
+
+// 마우스 오버 핸들러 (딜레이 추가)
+const delayedMouseOver = (player: any, event: MouseEvent) => {
+    hoverTimeout.value = setTimeout(() => {
+        handleMouseOver(player, event);
+    }, 500); // 500ms 딜레이
+};
+
 
   const handleMouseLeave = () => {
       hoveredPlayer.value = null;
