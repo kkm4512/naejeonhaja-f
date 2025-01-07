@@ -1,4 +1,4 @@
-import type { RiotAccountDto, RiotLeagueDto, RiotSummonerDto } from "./res/resRiotDto"
+import type { RiotAccountDto, RiotChampionMasteryDto, RiotLeagueDto, RiotSummonerDto } from "./res/resRiotDto"
 
 export type LolRankType = {
     RANKED_FLEX_SR:string,
@@ -9,4 +9,5 @@ export type RiotPlayerDto = {
     riotAccountDto:RiotAccountDto,
     riotSummonerDto:RiotSummonerDto,
     riotLeagueDto:RiotLeagueDto
+    riotChampionMasteryDto:RiotChampionMasteryDto[]
 }

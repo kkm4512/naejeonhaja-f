@@ -11,7 +11,6 @@
 
             <!-- 아이콘과 제목 -->
             <div class="flex items-center gap-3 mb-6">
-                <span class="text-5xl">🚀</span>
                 <h5 class="text-4xl font-extrabold text-white drop-shadow-xl">
                     {{ player?.name }}
                 </h5>
@@ -28,22 +27,39 @@
             </div>
             
             <!-- 챔피언 정보 보여주는 곳 -->
-            <div class="mt-6 grid grid-cols-3 gap-4">
-                <div 
-                    v-for="champion in championDtos" 
-                    :key="champion.id"
-                    class="text-center"
-                >
-                    <!-- 챔피언 이미지 -->
-                    <img 
-                        :src="`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion.image.full}`" 
-                        :alt="champion.name" 
-                        class="w-16 h-16 rounded-full border-2 border-white"
-                    />
-                    <!-- 챔피언 이름 -->
-                    <p class="text-white font-semibold mt-2">{{ champion.name }}</p>
+            <div class="mt-6">
+                <!-- 제목 추가 -->
+                <h3 class="text-2xl font-extrabold text-white text-center mb-6">
+                    🎯 모스트 3픽!
+                </h3>
+
+                <!-- 챔피언 리스트 -->
+                <div class="flex flex-wrap justify-center gap-6">
+                    <div class="flex flex-wrap justify-center gap-6">
+                        <div 
+                            v-for="(champion, index) in championDtos" 
+                            :key="index"
+                            class="text-center"
+                        >
+                            <!-- 챔피언 이미지 -->
+                            <img 
+                                :src="`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champion.image.full}`" 
+                                :alt="champion.name" 
+                                class="w-16 h-16 rounded-full border-2 border-white"
+                            />
+
+                            <!-- 챔피언 정보 반복 예제 (내부 v-for) -->
+                            <ul class="mt-2 text-sm text-white">
+                                <li>{{ riotPlayerDto?.riotChampionMasteryDto[index].championLevel }} Lv</li>
+                                <li>{{ riotPlayerDto?.riotChampionMasteryDto[index].championPoints }} Point</li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
-            </div>           
+            </div>
+
+
 
             <!-- 추가 정보 섹션 -->
             <div class="mt-4 p-4 bg-white rounded-lg shadow-md">
@@ -73,7 +89,6 @@ const props = defineProps<{
 
 const riotPlayerDto = ref<RiotPlayerDto>();
 const championDtos = ref<ChampionDto[]>([]);
-// API 호출 및 캐싱 로직
 const fetchPlayerData = async (playerName: string) => {
     try {
         const encodedPlayerName = encodeURIComponent(playerName);
@@ -101,21 +116,21 @@ const fetchPlayerData = async (playerName: string) => {
                 );
 
                 if (leagueResponse.code === 200) {
-                    riotPlayerDto.value = {
-                        riotAccountDto: accountResponse?.data,
-                        riotSummonerDto: summonerResponse.data,
-                        riotLeagueDto: leagueResponse.data
-                    };
                     const championMasteryResponses = await uFetch<null, ApiResponse<RiotChampionMasteryDto[]>>(
                         null, 
                         `/game/lol/riot/puuid/${riotAccountDto.puuid}/champion`,
                         "GET"
                     );
                     if (championMasteryResponses.code === 200) {
+                        riotPlayerDto.value = {
+                        riotAccountDto: accountResponse?.data,
+                        riotSummonerDto: summonerResponse.data,
+                        riotLeagueDto: leagueResponse.data,
+                        riotChampionMasteryDto: championMasteryResponses.data
+                    };
                         for ( let i=0; i< championMasteryResponses.data.length; i++) {
                             const championId = championMasteryResponses.data[i].championId;
                             const championResponse = await uFetch<null, ApiResponse<ChampionDto>>(null,`/game/lol/dataDragon/championId/${championId}`,"GET")
-                            console.log(championResponse.data)
                             championDtos.value?.push(championResponse.data);
                         }
                     }
@@ -158,7 +173,6 @@ watchEffect(async () => {
                 plugins: {
                     legend: {
                         labels: {
-                            // ✅ 커스텀 라벨 추가 (Wins:26 / Losses:6)
                             generateLabels: (chart) => {
                                 const data = chart.data.datasets[0].data;
                                 return [
