@@ -50,30 +50,38 @@
             <li
               v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
-              :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              @mouseover="delayedMouseOver(player,$event)"
-              @mouseleave="handleMouseLeave()"
+              class="flex flex-col gap-2 p-3 rounded-lg border-4 transition hover:scale-105"
+              :class="getTierGroupClass(player.tier)"
             >
-              <span class="text-sm font-bold text-blue-900">{{ getPlayerName(player.name) }}</span>
-              <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-              <div class="flex gap-2 items-center">
-                <div
-                  class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                  style="max-width: 80px;"
-                >
-                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                </div>
-                <div
-                  :class="[
-                    'px-3 py-1 text-xs font-semibold rounded',
-                    player.mmrReduced
-                      ? 'bg-gray-300 text-gray-800'
-                      : 'bg-blue-300 text-blue-900'
-                  ]"
-                >
-                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
+              <div class="flex items-center gap-4 w-full">
+                <span class="text-sm font-bold text-blue-900">{{ getPlayerName(player.name) }}</span>
+                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
+                <div class="flex gap-2 items-center">
+                  <div
+                    class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
+                    style="max-width: 80px;"
+                  >
+                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
+                  </div>
+                  <div
+                    :class="[
+                      'px-3 py-1 text-xs font-semibold rounded',
+                      player.mmrReduced ? 'bg-gray-300 text-gray-800' : 'bg-blue-300 text-blue-900'
+                    ]"
+                  >
+                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
+                  </div>
                 </div>
               </div>
+              <!-- 전력확인 버튼을 아래로 배치 -->
+              <button 
+                class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-xs text-white font-semibold rounded-lg shadow-md 
+                      hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 
+                      transform hover:scale-110 transition-all duration-300 ease-out self-end"
+                @click="handleModalOpen(player, $event)"
+              >
+                전력확인
+              </button>
             </li>
           </ul>
           <!-- Team A 승리 버튼 -->
@@ -100,30 +108,38 @@
             <li
               v-for="(player, index) in lolTeamResponseDto.teamB"
               :key="index"
-              :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
-              @mouseover="delayedMouseOver(player, $event)"
-              @mouseleave="handleMouseLeave()"              
+              class="flex flex-col gap-2 p-3 rounded-lg border-4 transition hover:scale-105"
+              :class="getTierGroupClass(player.tier)"
             >
-              <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name) }}</span>
-              <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-              <div class="flex gap-2 items-center">
-                <div
-                  class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                  style="max-width: 80px;"
-                >
-                  {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                </div>
-                <div
-                  :class="[
-                    'px-3 py-1 text-xs font-semibold rounded',
-                    player.mmrReduced
-                      ? 'bg-gray-300 text-gray-800'
-                      : 'bg-red-300 text-red-900'
-                  ]"
-                >
-                  {{ player.mmrReduced ? 'Sub' : 'Main' }}
+              <div class="flex items-center gap-4 w-full">
+                <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name) }}</span>
+                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
+                <div class="flex gap-2 items-center">
+                  <div
+                    class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
+                    style="max-width: 80px;"
+                  >
+                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
+                  </div>
+                  <div
+                    :class="[
+                      'px-3 py-1 text-xs font-semibold rounded',
+                      player.mmrReduced ? 'bg-gray-300 text-gray-800' : 'bg-red-300 text-red-900'
+                    ]"
+                  >
+                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
+                  </div>
                 </div>
               </div>
+              <!-- 전력확인 버튼을 아래로 배치 -->
+              <button 
+                class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-xs text-white font-semibold rounded-lg shadow-md 
+                      hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 
+                      transform hover:scale-110 transition-all duration-300 ease-out self-end"
+                @click="handleModalOpen(player, $event)"
+              >
+                전력확인
+              </button>
             </li>
           </ul>
           <!-- Team B 승리 버튼 -->
@@ -232,20 +248,13 @@
   
   // 메서드
 
-  const handleMouseOver = (player: LolPlayerDto, event: MouseEvent) => {
+  const handleModalOpen = (player: LolPlayerDto, event: MouseEvent) => {
     hoveredPlayer.value = player;
     modalPosition.value = {
         x: event.clientX + 10, // 마우스 위치 기준 약간 오른쪽
         y: event.clientY + 10  // 마우스 위치 기준 약간 아래쪽
     };
     isModalOpen.value = true;
-};
-
-// 마우스 오버 핸들러 (딜레이 추가)
-const delayedMouseOver = (player: any, event: MouseEvent) => {
-    hoverTimeout.value = setTimeout(() => {
-        handleMouseOver(player, event);
-    }, 500); // 500ms 딜레이
 };
 
 
