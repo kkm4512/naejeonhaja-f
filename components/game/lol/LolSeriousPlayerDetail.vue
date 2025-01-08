@@ -37,7 +37,7 @@
                 <div class="flex flex-wrap justify-center gap-6">
                     <div class="flex flex-wrap justify-center gap-6">
                         <div 
-                            v-for="(champion, index) in championDtos" 
+                            v-for="(champion, index) in riotPlayerDto?.championDtos" 
                             :key="index"
                             class="text-center"
                         >
@@ -50,8 +50,8 @@
 
                             <!-- 챔피언 정보 반복 예제 (내부 v-for) -->
                             <ul class="mt-2 text-sm text-white">
-                                <li>{{ riotPlayerDto?.riotChampionMasteryDto[index].championLevel }} Lv</li>
-                                <li>{{ riotPlayerDto?.riotChampionMasteryDto[index].championPoints }} Point</li>
+                                <li>{{ riotPlayerDto?.riotChampionMasteryDtos[index].championLevel }} Lv</li>
+                                <li>{{ riotPlayerDto?.riotChampionMasteryDtos[index].championPoints }} Point</li>
                             </ul>
                         </div>
                     </div>
@@ -77,8 +77,6 @@ import type { ApiResponse } from '~/types/common';
 import type { LolPlayerDto } from '~/types/game/lol/common';
 import type { RiotPlayerDto } from '~/types/game/riot/common';
 import Chart from 'chart.js/auto';
-import type { RiotAccountDto, RiotChampionMasteryDto, RiotLeagueDto, RiotSummonerDto } from '~/types/game/riot/res/resRiotDto';
-import type { ChampionDto } from '~/types/game/dataDragon/res/resDataDragonDto';
 const props = defineProps<{ 
     player: LolPlayerDto | null,
     position: { x: number, y: number },
@@ -86,64 +84,13 @@ const props = defineProps<{
 
 
 const riotPlayerDto = ref<RiotPlayerDto>();
-const championDtos = ref<ChampionDto[]>([]);
 const fetchPlayerData = async (playerName: string) => {
     riotPlayerDto.value = undefined;
-    championDtos.value = []; 
     try {
         const encodedPlayerName = encodeURIComponent(playerName);
-
-        const accountResponse = await uFetch<null, ApiResponse<RiotAccountDto>>(
-            null, 
-            `/game/lol/riot/playerName/${encodedPlayerName}`,
-            "GET"
-        );
-        
-        if (accountResponse.code === 200) {
-            const riotAccountDto = accountResponse.data;
-            const summonerResponse = await uFetch<null, ApiResponse<RiotSummonerDto>>(
-                null, 
-                `/game/lol/riot/puuid/${riotAccountDto.puuid}`,
-                "GET"
-            );
-
-            if (summonerResponse.code === 200) {
-                const riotSummonerDto = summonerResponse.data;
-                const leagueResponse = await uFetch<null, ApiResponse<RiotLeagueDto>>(
-                    null, 
-                    `/game/lol/riot/leagueId/${encodeURIComponent(riotSummonerDto.id)}`,
-                    "GET"
-                );
-
-                if (leagueResponse.code === 200) {
-                    const championMasteryResponses = await uFetch<null, ApiResponse<RiotChampionMasteryDto[]>>(
-                        null, 
-                        `/game/lol/riot/puuid/${riotAccountDto.puuid}/champion`,
-                        "GET"
-                    );
-                    if (championMasteryResponses.code === 200) {
-                        riotPlayerDto.value = {
-                        riotAccountDto: accountResponse.data,
-                        riotSummonerDto: summonerResponse.data,
-                        riotLeagueDto: leagueResponse.data,
-                        riotChampionMasteryDto: championMasteryResponses.data
-                    };
-                        // **Promise.all 사용 (병렬 요청)**
-                        const championResponses = await Promise.all(
-                            championMasteryResponses.data.map(async (mastery) => {
-                                const response = await uFetch<null, ApiResponse<ChampionDto>>(
-                                    null, 
-                                    `/game/lol/dataDragon/championId/${mastery.championId}`,
-                                    "GET"
-                                );
-                                return response.data;
-                            })
-                        );
-                         // **한 번에 반영**
-                        championDtos.value = championResponses;
-                    }
-                }
-            }
+        const riotPlayerResponse = await uFetch<null, ApiResponse<RiotPlayerDto>>(null, `/game/lol/riot/riotPlayer/${encodedPlayerName}`,"GET");
+        if (riotPlayerResponse.code === 200) {
+            riotPlayerDto.value = riotPlayerResponse.data;
         }
     } catch (error) {
         console.error('API 호출 실패:', error);
