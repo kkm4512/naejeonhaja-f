@@ -59,8 +59,6 @@
                 </div>
             </div>
 
-
-
             <!-- 추가 정보 섹션 -->
             <div class="mt-4 p-4 bg-white rounded-lg shadow-md">
                 <p class="text-gray-800 font-semibold">랭크 정보</p>
@@ -90,6 +88,8 @@ const props = defineProps<{
 const riotPlayerDto = ref<RiotPlayerDto>();
 const championDtos = ref<ChampionDto[]>([]);
 const fetchPlayerData = async (playerName: string) => {
+    riotPlayerDto.value = undefined;
+    championDtos.value = []; 
     try {
         const encodedPlayerName = encodeURIComponent(playerName);
 
@@ -123,16 +123,24 @@ const fetchPlayerData = async (playerName: string) => {
                     );
                     if (championMasteryResponses.code === 200) {
                         riotPlayerDto.value = {
-                        riotAccountDto: accountResponse?.data,
+                        riotAccountDto: accountResponse.data,
                         riotSummonerDto: summonerResponse.data,
                         riotLeagueDto: leagueResponse.data,
                         riotChampionMasteryDto: championMasteryResponses.data
                     };
-                        for ( let i=0; i< championMasteryResponses.data.length; i++) {
-                            const championId = championMasteryResponses.data[i].championId;
-                            const championResponse = await uFetch<null, ApiResponse<ChampionDto>>(null,`/game/lol/dataDragon/championId/${championId}`,"GET")
-                            championDtos.value?.push(championResponse.data);
-                        }
+                        // **Promise.all 사용 (병렬 요청)**
+                        const championResponses = await Promise.all(
+                            championMasteryResponses.data.map(async (mastery) => {
+                                const response = await uFetch<null, ApiResponse<ChampionDto>>(
+                                    null, 
+                                    `/game/lol/dataDragon/championId/${mastery.championId}`,
+                                    "GET"
+                                );
+                                return response.data;
+                            })
+                        );
+                         // **한 번에 반영**
+                        championDtos.value = championResponses;
                     }
                 }
             }
@@ -144,13 +152,18 @@ const fetchPlayerData = async (playerName: string) => {
 };
 
 let winLossChartInstance: Chart | null = null;
-
 watchEffect(async () => {
     if (props.player?.name) {
         await fetchPlayerData(props.player.name);
-    }
 
-    if (riotPlayerDto.value) {
+        // 차트 데이터가 없는 경우, 차트 초기화
+        if (!riotPlayerDto.value || !riotPlayerDto.value.riotLeagueDto.wins) {
+            if (winLossChartInstance) {
+                winLossChartInstance.destroy();
+            }
+            return; // 데이터가 없으므로 차트를 생성하지 않음
+        }
+
         const ctx = document.getElementById('winLossChart') as HTMLCanvasElement;
 
         // 기존 차트 제거 (중복 방지)
@@ -162,10 +175,13 @@ watchEffect(async () => {
         winLossChartInstance = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Wins', 'Losses','승률'],
+                labels: ['Wins', 'Losses'],
                 datasets: [{
                     label: 'Win/Loss Ratio',
-                    data: [riotPlayerDto.value.riotLeagueDto.wins, riotPlayerDto.value.riotLeagueDto.losses],
+                    data: [
+                        riotPlayerDto.value.riotLeagueDto.wins, 
+                        riotPlayerDto.value.riotLeagueDto.losses
+                    ],
                     backgroundColor: ['#4CAF50', '#FF6384'],
                 }]
             },
@@ -201,6 +217,7 @@ watchEffect(async () => {
         });
     }
 });
+
 
 
 
