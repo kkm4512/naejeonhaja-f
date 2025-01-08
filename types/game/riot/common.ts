@@ -1,3 +1,4 @@
+import type { ChampionDto } from "../dataDragon/res/resDataDragonDto"
 import type { RiotAccountDto, RiotChampionMasteryDto, RiotLeagueDto, RiotSummonerDto } from "./res/resRiotDto"
 
 export type LolRankType = {
@@ -9,5 +10,6 @@ export type RiotPlayerDto = {
     riotAccountDto:RiotAccountDto,
     riotSummonerDto:RiotSummonerDto,
     riotLeagueDto:RiotLeagueDto
-    riotChampionMasteryDto:RiotChampionMasteryDto[]
+    riotChampionMasteryDtos:RiotChampionMasteryDto[]
+    championDtos:ChampionDto[]
 }

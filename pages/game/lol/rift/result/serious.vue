@@ -220,7 +220,6 @@
   const hoveredPlayer = ref<LolPlayerDto | null>(null);
   const isModalOpen = ref<boolean>(false);
   const modalPosition = ref({ x: 0, y: 0 });
-  const hoverTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
   const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
