@@ -8,7 +8,7 @@ import { PlayerMode, type Line, type LineRole, type LolPlayerDto, type Tier } fr
 import LolFooter from './LolFooter.vue';
 import LolPlayerHistory from './LolPlayerHistory.vue';
 import LolMenual from './LolMenual.vue';
-import type { RiotAccountDto, RiotLeagueDto, RiotSummonerDto } from '~/types/game/riot/res/resRiotDto';
+import type { RiotPlayerBasicDto } from '~/types/game/riot/common';
 
 // Props
 const props = defineProps<{
@@ -76,28 +76,20 @@ const fetchPlayerData = async (playerName: string) => {
   const encodedPlayerName = encodeURIComponent(playerName);
   if (!playerName) return;
     const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
-    const riotAccoutResponse = await uFetch<null, ApiResponse<RiotAccountDto>>(null, `/game/lol/riot/playerName/${encodedPlayerName}`, 'GET');
-    if (riotAccoutResponse.code === 404) {
-      lolPlayerDto.value[playerIndex].errorMessage = riotAccoutResponse.message;
+    const riotPlayerBasicResponse = await uFetch<null, ApiResponse<RiotPlayerBasicDto>>(null, `/game/lol/riot/riotPlayerBasic/${encodedPlayerName}`, 'GET');
+    if (riotPlayerBasicResponse.code === 404) {
+      lolPlayerDto.value[playerIndex].errorMessage = riotPlayerBasicResponse.message;
       lolPlayerDto.value[playerIndex].successMessage = "";
     }
     else {
-      lolPlayerDto.value[playerIndex].successMessage = riotAccoutResponse.message;
+      lolPlayerDto.value[playerIndex].successMessage = riotPlayerBasicResponse.message;
       lolPlayerDto.value[playerIndex].errorMessage = "";
     }
-    if (riotAccoutResponse.code === 200) {
-      const riotSummonerResponse = await uFetch<null, ApiResponse<RiotSummonerDto>>(null, `/game/lol/riot/puuid/${riotAccoutResponse.data.puuid}`, 'GET');
-      if (riotSummonerResponse.code === 200) {
-        const encodedLeagueId = encodeURIComponent(riotSummonerResponse.data.id);
-        const riotLeagueResponse = await uFetch<null, ApiResponse<RiotLeagueDto>>(null, `/game/lol/riot/leagueId/${encodedLeagueId}`, 'GET');
-        if (!riotLeagueResponse.data) {
+    if (!riotPlayerBasicResponse.data.riotLeagueDto) {
           lolPlayerDto.value[playerIndex].tier = "UNRANKED";
           return;
-        }
-        lolPlayerDto.value[playerIndex].tier = parseTier(riotLeagueResponse.data.tier,riotLeagueResponse.data.rank);
       }
-    }
-
+        lolPlayerDto.value[playerIndex].tier = parseTier(riotPlayerBasicResponse.data.riotLeagueDto.tier,riotPlayerBasicResponse.data.riotLeagueDto.rank);
   };
 
 
