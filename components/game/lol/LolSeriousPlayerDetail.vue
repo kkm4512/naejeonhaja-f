@@ -23,8 +23,17 @@
 
             <!-- 승패 비율을 원형 그래프 (예: donut chart) -->
             <div class="mt-6 flex justify-center">
-                <canvas id="winLossChart" width="200" height="200"></canvas>
+                <!-- 전적이 있을 경우 차트 표시 -->
+                <div v-if="riotPlayerDto?.riotLeagueDto && riotPlayerDto?.riotLeagueDto.wins !== undefined">
+                    <canvas id="winLossChart" width="200" height="200"></canvas>
+                </div>
+
+                <!-- 전적이 없을 경우 메시지 표시 -->
+                <div v-else class="text-center text-white font-semibold text-lg">
+                    이번 시즌 전적이 조회되지 않습니다!
+                </div>
             </div>
+
             
             <!-- 챔피언 정보 보여주는 곳 -->
             <div class="mt-6">
@@ -99,69 +108,78 @@ const fetchPlayerData = async (playerName: string) => {
 };
 
 let winLossChartInstance: Chart | null = null;
-watchEffect(async () => {
-    if (props.player?.name) {
-        await fetchPlayerData(props.player.name);
 
-        // 차트 데이터가 없는 경우, 차트 초기화
-        if (!riotPlayerDto.value || !riotPlayerDto.value.riotLeagueDto.wins) {
-            if (winLossChartInstance) {
-                winLossChartInstance.destroy();
-            }
-            return; // 데이터가 없으므로 차트를 생성하지 않음
-        }
+// 차트 초기화 메서드
+const clearChart = () => {
+    if (winLossChartInstance) {
+        winLossChartInstance.destroy();
+        winLossChartInstance = null;
+    }
+};
 
-        const ctx = document.getElementById('winLossChart') as HTMLCanvasElement;
+// 차트 렌더링 메서드
+const renderChart = () => {
+    if (!riotPlayerDto.value || !riotPlayerDto.value.riotLeagueDto.wins) {
+        clearChart(); // 데이터가 없는 경우 차트 제거
+        return;
+    }
 
-        // 기존 차트 제거 (중복 방지)
-        if (winLossChartInstance) {
-            winLossChartInstance.destroy();
-        }
+    const ctx = document.getElementById('winLossChart') as HTMLCanvasElement;
 
-        // 새로운 차트 생성
-        winLossChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Wins', 'Losses'],
-                datasets: [{
-                    label: 'Win/Loss Ratio',
-                    data: [
-                        riotPlayerDto.value.riotLeagueDto.wins, 
-                        riotPlayerDto.value.riotLeagueDto.losses
-                    ],
-                    backgroundColor: ['#4CAF50', '#FF6384'],
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        labels: {
-                            generateLabels: (chart) => {
-                                const data = chart.data.datasets[0].data;
-                                return [
-                                    {
-                                        text: `Wins: ${data[0]}`,
-                                        fillStyle: '#4CAF50',
-                                        strokeStyle: '#4CAF50',
-                                        lineWidth: 2
-                                    },
-                                    {
-                                        text: `Losses: ${data[1]}`,
-                                        fillStyle: '#FF6384',
-                                        strokeStyle: '#FF6384',
-                                        lineWidth: 2
-                                    }
-                                ];
-                            },
-                            font: {
-                                size: 16,
-                                weight: 'bold'
-                            }
+    clearChart(); // 기존 차트 제거 후 새로 생성
+
+    winLossChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Wins', 'Losses'],
+            datasets: [{
+                label: 'Win/Loss Ratio',
+                data: [
+                    riotPlayerDto.value.riotLeagueDto.wins, 
+                    riotPlayerDto.value.riotLeagueDto.losses
+                ],
+                backgroundColor: ['#4CAF50', '#FF6384'],
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: (chart) => {
+                            const data = chart.data.datasets[0].data;
+                            return [
+                                {
+                                    text: `Wins: ${data[0]}`,
+                                    fillStyle: '#4CAF50',
+                                    strokeStyle: '#4CAF50',
+                                    lineWidth: 2
+                                },
+                                {
+                                    text: `Losses: ${data[1]}`,
+                                    fillStyle: '#FF6384',
+                                    strokeStyle: '#FF6384',
+                                    lineWidth: 2
+                                }
+                            ];
+                        },
+                        font: {
+                            size: 16,
+                            weight: 'bold'
                         }
                     }
                 }
             }
-        });
+        }
+    });
+};
+
+// 플레이어 변경 감지
+watchEffect(async () => {
+    if (props.player?.name) {
+        await fetchPlayerData(props.player.name);
+        renderChart();  // 데이터가 변경될 때 차트 렌더링
+    } else {
+        clearChart();  // 플레이어가 없을 경우 차트 제거
     }
 });
 

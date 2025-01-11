@@ -13,3 +13,9 @@ export type RiotPlayerDto = {
     riotChampionMasteryDtos:RiotChampionMasteryDto[]
     championDtos:ChampionDto[]
 }
+
+export type RiotPlayerBasicDto = {
+    riotAccountDto:RiotAccountDto,
+    riotSummonerDto:RiotSummonerDto,
+    riotLeagueDto:RiotLeagueDto
+}

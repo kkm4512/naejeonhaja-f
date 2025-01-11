@@ -1,10 +1,14 @@
+ChatGPT의 말:
+ChatGPT
+vue
+코드 복사
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 p-6">
     <!-- 카드 전체 컨테이너 -->
-    <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-8">
+    <div class="w-full max-w-6xl bg-white shadow-2xl rounded-2xl p-8">
       <!-- 대전 내역 이름 -->
-      <div class="mb-6">
-        <label for="match-name" class="block text-xl font-semibold text-gray-800 mb-2">
+      <div class="mb-6 text-center">
+        <label for="match-name" class="block text-2xl font-bold text-gray-900 mb-4">
           대전 결과 이름
         </label>
         <input
@@ -12,82 +16,72 @@
           v-model="playerResultHistoryTitle"
           type="text"
           placeholder="저장할 대전 결과 이름을 기재하세요"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+          class="w-3/4 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
       </div>
 
       <!-- Team A vs Team B -->
-      <div class="flex justify-between items-center mb-8">
-        <div class="flex flex-col items-center">
-          <span class="text-3xl font-bold text-blue-700">Team A</span>
-          <span class="text-lg font-semibold text-blue-800">
+      <div class="flex justify-between items-center my-8 text-center">
+        <div>
+          <span class="text-4xl font-bold text-blue-700">Team A</span>
+          <p class="text-lg font-semibold text-blue-800 mt-2">
             Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamA || []) }}
-          </span>
+          </p>
         </div>
-        <span class="text-2xl font-extrabold text-gray-600">VS</span>
-        <div class="flex flex-col items-center">
-          <span class="text-3xl font-bold text-red-700">Team B</span>
-          <span class="text-lg font-semibold text-red-800">
+        <span class="text-4xl font-extrabold text-gray-700">VS</span>
+        <div>
+          <span class="text-4xl font-bold text-red-700">Team B</span>
+          <p class="text-lg font-semibold text-red-800 mt-2">
             Total MMR: {{ calculateTotalMMR(lolTeamResponseDto.teamB || []) }}
-          </span>
+          </p>
         </div>
       </div>
 
       <!-- 팀 멤버 리스트 -->
-      <div class="grid grid-cols-2 gap-6">
+      <div class="grid grid-cols-2 gap-12">
         <!-- Team A -->
         <div
-          class="relative p-6 rounded-xl shadow-lg transition"
-          :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
+          class="p-6 rounded-2xl shadow-lg transition"
+          :class="{
+            'bg-blue-100 border-4 border-blue-400': winner === 'TeamA',
+            'bg-gray-100 border-2 border-gray-400': winner !== 'TeamA'
+          }"
         >
-          <!-- Winner/Lose/Draw 표시 -->
-          <div
-            :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).class"
-          >
-            {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).text }}
-          </div>
-          <ul class="space-y-3">
-            <li
+          <h2 class="text-3xl font-bold text-blue-700 text-center">Team A</h2>
+          <div class="space-y-4">
+            <div
               v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
-              class="flex flex-col gap-2 p-3 rounded-lg border-4 transition hover:scale-105"
-              :class="getTierGroupClass(player.tier)"
+              class="flex items-center justify-between bg-blue-100 p-4 rounded-lg shadow-md"
             >
-              <div class="flex items-center gap-4 w-full">
-                <span class="text-sm font-bold text-blue-900">{{ getPlayerName(player.name) }}</span>
-                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-                <div class="flex gap-2 items-center">
-                  <div
-                    class="px-3 py-1 text-xs font-semibold rounded bg-blue-200 text-blue-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                    style="max-width: 80px;"
-                  >
-                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                  </div>
-                  <div
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded',
-                      player.mmrReduced ? 'bg-gray-300 text-gray-800' : 'bg-blue-300 text-blue-900'
-                    ]"
-                  >
-                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                  </div>
+              <!-- 플레이어 정보 -->
+              <div class="flex items-center space-x-4">
+                <img :src="`${lolSummonerIconUrl}${riotPlayerDtos[index]?.riotSummonerDto?.profileIconId || 0}.png`" class="w-12 h-12 rounded-full border-2 border-blue-400">
+                <div>
+                  <p class="text-lg font-semibold text-blue-900">{{ riotPlayerDtos[index]?.riotAccountDto?.gameName }}</p>
+                  <p class="text-sm text-blue-700">{{ getAbbreviatedLine(player.lines?.[0]?.line) }}</p>
                 </div>
               </div>
-              <!-- 전력확인 버튼을 아래로 배치 -->
-              <button 
-                class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-xs text-white font-semibold rounded-lg shadow-md 
-                      hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 
-                      transform hover:scale-110 transition-all duration-300 ease-out self-end"
-                @click="handleModalOpen(player, $event)"
-              >
-                전력확인
-              </button>
-            </li>
-          </ul>
+              
+              <!-- 메인/서브 정보 -->
+              <div class="text-sm font-semibold" :class="player.mmrReduced ? 'text-gray-600' : 'text-blue-700'">
+                {{ player.mmrReduced ? 'Sub' : 'Main' }}
+              </div>
+
+              <!-- 챔피언 정보 -->
+              <div class="flex space-x-4 items-center">
+                <div v-for="(riotChampionMasteryDto, _index) in riotPlayerDtos[index]?.riotChampionMasteryDtos" :key="_index" class="flex flex-col items-center">
+                  <img :src="`${lolChampionImageUrl}${riotPlayerDtos[index]?.championDtos[_index]?.image?.full}`" class="w-12 h-12 rounded-lg border-2 border-blue-400">
+                  <p class="text-xs font-semibold text-blue-900">Lv: {{ riotChampionMasteryDto.championLevel }}</p>
+                  <p class="text-xs text-blue-700">Pts: {{ riotChampionMasteryDto.championPoints }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- Team A 승리 버튼 -->
           <button
             @click="declareWinner('TeamA')"
-            class="mt-4 w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
+            class="mt-6 w-full py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition transform hover:scale-105"
           >
             Team A 승리
           </button>
@@ -95,57 +89,47 @@
 
         <!-- Team B -->
         <div
-          class="relative p-6 rounded-xl shadow-lg transition"
-          :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
+          class="p-6 rounded-2xl shadow-lg transition"
+          :class="{
+            'bg-red-100 border-4 border-red-400': winner === 'TeamB',
+            'bg-gray-100 border-2 border-gray-400': winner !== 'TeamB'
+          }"
         >
-          <!-- Winner/Lose/Draw 표시 -->
-          <div
-            :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).class"
-          >
-            {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).text }}
-          </div>
-          <ul class="space-y-3">
-            <li
+          <h2 class="text-3xl font-bold text-red-700 text-center">Team B</h2>
+          <div class="space-y-4">
+            <div
               v-for="(player, index) in lolTeamResponseDto.teamB"
               :key="index"
-              class="flex flex-col gap-2 p-3 rounded-lg border-4 transition hover:scale-105"
-              :class="getTierGroupClass(player.tier)"
+              class="flex items-center justify-between bg-red-100 p-4 rounded-lg shadow-md"
             >
-              <div class="flex items-center gap-4 w-full">
-                <span class="text-sm font-bold text-red-900">{{ getPlayerName(player.name) }}</span>
-                <span class="text-xs font-bold text-gray-800">{{ player.tier }}</span>
-                <div class="flex gap-2 items-center">
-                  <div
-                    class="px-3 py-1 text-xs font-semibold rounded bg-red-200 text-red-800 overflow-hidden text-ellipsis whitespace-nowrap"
-                    style="max-width: 80px;"
-                  >
-                    {{ getAbbreviatedLine(player.lines?.[0]?.line) }}
-                  </div>
-                  <div
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded',
-                      player.mmrReduced ? 'bg-gray-300 text-gray-800' : 'bg-red-300 text-red-900'
-                    ]"
-                  >
-                    {{ player.mmrReduced ? 'Sub' : 'Main' }}
-                  </div>
+              <!-- 플레이어 정보 -->
+              <div class="flex items-center space-x-4">
+                <img :src="`${lolSummonerIconUrl}${riotPlayerDtos[index + 5]?.riotSummonerDto?.profileIconId || 0}.png`" class="w-12 h-12 rounded-full border-2 border-red-400">
+                <div>
+                  <p class="text-lg font-semibold text-red-900">{{ riotPlayerDtos[index + 5]?.riotAccountDto?.gameName }}</p>
+                  <p class="text-sm text-red-700">{{ getAbbreviatedLine(player.lines?.[0]?.line) }}</p>
                 </div>
               </div>
-              <!-- 전력확인 버튼을 아래로 배치 -->
-              <button 
-                class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-xs text-white font-semibold rounded-lg shadow-md 
-                      hover:from-blue-600 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 
-                      transform hover:scale-110 transition-all duration-300 ease-out self-end"
-                @click="handleModalOpen(player, $event)"
-              >
-                전력확인
-              </button>
-            </li>
-          </ul>
+              
+              <!-- 메인/서브 정보 -->
+              <div class="text-sm font-semibold" :class="player.mmrReduced ? 'text-gray-600' : 'text-red-700'">
+                {{ player.mmrReduced ? 'Sub' : 'Main' }}
+              </div>
+
+              <!-- 챔피언 정보 -->
+              <div class="flex space-x-4 items-center">
+                <div v-for="(riotChampionMasteryDto, _index) in riotPlayerDtos[index + 5]?.riotChampionMasteryDtos" :key="_index" class="flex flex-col items-center">
+                  <img :src="`${lolChampionImageUrl}${riotPlayerDtos[index + 5]?.championDtos[_index]?.image?.full}`" class="w-12 h-12 rounded-lg border-2 border-red-400">
+                  <p class="text-xs font-semibold text-red-900">Lv: {{ riotChampionMasteryDto.championLevel }}</p>
+                  <p class="text-xs text-red-700">Pts: {{ riotChampionMasteryDto.championPoints }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- Team B 승리 버튼 -->
           <button
             @click="declareWinner('TeamB')"
-            class="mt-4 w-full py-3 bg-red-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-red-700 hover:scale-105 transition"
+            class="mt-6 w-full py-3 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition transform hover:scale-105"
           >
             Team B 승리
           </button>
@@ -153,63 +137,41 @@
       </div>
 
       <!-- 무승부 버튼과 결과 복사하기 버튼 -->
-      <div class="mt-8 flex justify-center gap-4">
-        <button
-          @click="declareWinner('Draw')"
-          class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
-        >
-          무승부
-        </button>
-        <button
-          @click="copyResults"
-          class="px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
-        >
-          결과 복사하기
-        </button>
+      <div class="mt-12 flex justify-center gap-6">
+        <button @click="declareWinner('Draw')" class="px-6 py-3 bg-gray-600 text-white rounded-lg shadow-md hover:bg-gray-700">무승부</button>
+        <button @click="copyResults" class="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700">결과 복사하기</button>
       </div>
 
       <!-- 이전으로, 팀 다시 구성하기, 저장 버튼 -->
       <div class="mt-6 flex justify-between gap-4">
-        <button
-          @click="goBack"
-          class="w-full px-6 py-3 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
-        >
-          이전으로
-        </button>
-        <button
-          @click="recomposeTeam"
-          class="w-full px-6 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition"
-        >
-          팀 다시 구성하기
-        </button>
-        <button
-          @click="saveTeam"
-          class="w-full px-6 py-3 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
-        >
-          저장
-        </button>
+        <button @click="goBack" class="w-full py-3 bg-gray-600 text-white rounded-lg shadow-md hover:bg-gray-700">이전으로</button>
+        <button @click="recomposeTeam" class="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700">팀 다시 구성하기</button>
+        <button @click="saveTeam" class="w-full py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700">저장</button>
       </div>
     </div>
   </div>
-  <div v-if="isModalOpen">
-    <LolSeriousPlayerDetail :player="hoveredPlayer" :position="modalPosition" />
-  </div>
   <LolFooter />
 </template>
+
+
+
+
+
     
   <script setup lang="ts">
   import LolFooter from '~/components/game/lol/LolFooter.vue';
-  import LolSeriousPlayerDetail from '~/components/game/lol/LolSeriousPlayerDetail.vue';
   import { useLolStore } from '~/stores/lol/useLolStore';
   import { useSwitchStore } from '~/stores/lol/useSwitchStore';
   import type { ApiResponse } from '~/types/common';
   import type { LolPlayerDto, LolTeamResultDto } from '~/types/game/lol/common';
   import type { LolPlayerHistoryRequestDto, LolPlayerResultHistoryRequestDto } from '~/types/game/lol/req/reqLolDto';
   import type { LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
+  import type { RiotPlayerDto } from '~/types/game/riot/common';
 
- onMounted(() => {
-   lolStore.loadRiftTeams(); 
-   lolStore.loadInitRiftTeamsWithTitle()
+  onMounted(async() => {
+    lolStore.loadRiftTeams();
+    lolStore.loadInitRiftTeamsWithTitle();
+    await getRiotPlayerDtos();
 });
 
   // 데이터
@@ -217,9 +179,31 @@
   const winner = ref<string>("");
   const switchStore = useSwitchStore();
   const playerResultHistoryTitle = ref<string>("");
-  const hoveredPlayer = ref<LolPlayerDto | null>(null);
-  const isModalOpen = ref<boolean>(false);
-  const modalPosition = ref({ x: 0, y: 0 });
+  const riotPlayerDtos = ref<RiotPlayerDto[]>([]);
+  const lolChampionImageUrl = "https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/";
+  const lolSummonerIconUrl = "https://ddragon.leagueoflegends.com/cdn/15.1.1/img/profileicon/"
+
+  const getRiotPlayerDtos = async () => {
+    riotPlayerDtos.value = []; // 초기화    
+    let combinedTeams: LolPlayerDto[] = [
+        ...lolStore.riftTeamA,
+        ...lolStore.riftTeamB
+    ];
+    try {
+        for (const combinedTeam of combinedTeams) {
+            const encodedPlayerName = encodeURIComponent(combinedTeam.name);
+            const riotPlayerResponse = await uFetch<null, ApiResponse<RiotPlayerDto>>(
+                null, 
+                `/game/lol/riot/riotPlayer/${encodedPlayerName}`, 
+                "GET"
+            );
+            riotPlayerDtos.value.push(riotPlayerResponse.data);
+        }
+        
+    } catch (error) {
+        console.error('API 호출 중 오류 발생:', error);
+    }
+};
 
   const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
@@ -244,24 +228,6 @@
     teamB: lolTeamResultRequestDtoB.value,
   })
 )
-  
-  // 메서드
-
-  const handleModalOpen = (player: LolPlayerDto, event: MouseEvent) => {
-    hoveredPlayer.value = player;
-    modalPosition.value = {
-        x: event.clientX + 10, // 마우스 위치 기준 약간 오른쪽
-        y: event.clientY + 10  // 마우스 위치 기준 약간 아래쪽
-    };
-    isModalOpen.value = true;
-};
-
-
-  const handleMouseLeave = () => {
-      hoveredPlayer.value = null;
-      isModalOpen.value = false;
-  };
-
   const declareWinner = (team: string) => {
     winner.value = team; // 승리한 팀 설정
     
@@ -322,6 +288,7 @@ ${formatTeamData(lolTeamResponseDto.value.teamB)}
       lolStore.updateRiftTeams(response.data.teamA,response.data.teamB);
       lolPlayerResultHistoryRequestDto.value.teamA.team = response.data.teamA;
       lolPlayerResultHistoryRequestDto.value.teamB.team = response.data.teamB;
+      await getRiotPlayerDtos();
     } catch (error) {
       alert("팀을 다시 구성하는 데 실패했습니다.");
     }

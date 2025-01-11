@@ -3,11 +3,7 @@ export type ChampionDto = {
     id: string;
     key: string;
     name: string;
-    title: string;
-    blurb: string;
     image: ImageDto;
-    tags: string[];
-    partype: string;
 };
 
 export type ImageDto = {

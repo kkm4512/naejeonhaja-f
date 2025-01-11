@@ -22,10 +22,6 @@ export type RiotLeagueDto = {
     leaguePoints: number;
     wins: number;
     losses: number;
-    veteran: boolean;      // 리그에서 오래 활동한 플레이어인지 여부
-    inactive: boolean;     // 계정이 비활성화 상태인지 여부
-    freshBlood: boolean;   // 신규 플레이어인지 여부
-    hotStreak: boolean;    // 현재 연승 중인지 여부
 };
 
 export type RiotChampionMasteryDto = {
@@ -33,13 +29,6 @@ export type RiotChampionMasteryDto = {
     championId: number;
     championLevel: number;
     championPoints: number;
-    lastPlayTime: number;
-    championPointsSinceLastLevel: number;
-    championPointsUntilNextLevel: number;
-    markRequiredForNextLevel: number;
-    tokensEarned: number;
-    championSeasonMilestone: number;
-    milestoneGrades: string[];
 }
 
 
