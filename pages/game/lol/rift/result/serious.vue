@@ -153,10 +153,6 @@ vue
   <LolFooter />
 </template>
 
-
-
-
-
     
   <script setup lang="ts">
   import LolFooter from '~/components/game/lol/LolFooter.vue';

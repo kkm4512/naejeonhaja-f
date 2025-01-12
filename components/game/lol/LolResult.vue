@@ -187,7 +187,6 @@
     domain: string;
     title: string;
   }>();
-  const rawDo
 
   // 데이터
   const lolStore = useLolStore();
