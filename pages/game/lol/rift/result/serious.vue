@@ -37,9 +37,15 @@
       <div class="grid grid-cols-2 gap-8">
         <!-- Team A -->
         <div
-          class="p-4 rounded-xl shadow-lg transition transform hover:scale-105"
-          :class="winner === 'TeamA' ? 'bg-blue-100 border-4 border-blue-500' : 'bg-gray-50 border border-gray-300'"
-        >
+            class="relative p-6 rounded-xl shadow-lg transition"
+            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamA.outcome,'TeamA')"
+          >
+            <!-- Winner/Lose/Draw 표시 -->
+            <div
+              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).class"
+            >
+              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamA.outcome).text }}
+            </div>
           <div class="space-y-4 w-full">
             <div
               v-for="(player, index) in lolTeamResponseDto.teamA"
@@ -81,9 +87,15 @@
 
         <!-- Team B -->
         <div
-          class="p-4 rounded-xl shadow-lg transition transform hover:scale-105"
-          :class="winner === 'TeamB' ? 'bg-red-100 border-4 border-red-500' : 'bg-gray-50 border border-gray-300'"
-        >
+            class="relative p-6 rounded-xl shadow-lg transition"
+            :class="getTeamBackgroundClass(lolPlayerResultHistoryRequestDto.teamB.outcome,'TeamB')"
+          >
+            <!-- Winner/Lose/Draw 표시 -->
+            <div
+              :class="getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).class"
+            >
+              {{ getOutcomeClass(lolPlayerResultHistoryRequestDto.teamB.outcome).text }}
+            </div>
           <div class="space-y-4">
             <div
               v-for="(player, index) in lolTeamResponseDto.teamB"
