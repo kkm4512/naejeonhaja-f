@@ -77,7 +77,7 @@ const fetchPlayerData = async (playerName: string) => {
   if (!playerName) return;
     const playerIndex = lolPlayerDto.value.findIndex(player => player.name === playerName);
     const riotPlayerBasicResponse = await uFetch<null, ApiResponse<RiotPlayerBasicDto>>(null, `/game/lol/riot/riotPlayerBasic/${encodedPlayerName}`, 'GET');
-    if (riotPlayerBasicResponse.code === 404) {
+    if (riotPlayerBasicResponse.code !== 200) {
       lolPlayerDto.value[playerIndex].errorMessage = riotPlayerBasicResponse.message;
       lolPlayerDto.value[playerIndex].successMessage = "";
     }
