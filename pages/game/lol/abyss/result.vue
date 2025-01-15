@@ -99,16 +99,19 @@
       <!-- 무승부 버튼과 결과 복사하기 버튼 -->
       <div class="mt-8 flex justify-center gap-4">
         <button
+          @click="copyResults"
+          class="px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
+        >
+          결과 복사하기
+        </button>
+        <button
           @click="declareWinner('Draw')"
           class="px-8 py-4 bg-gray-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-gray-700 hover:scale-105 transition"
         >
           무승부
         </button>
-        <button
-          @click="copyResults"
-          class="px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-md hover:bg-green-700 hover:scale-105 transition"
-        >
-          결과 복사하기
+        <button @click="captureScreen(450, 240, 1000, 480)" class="px-6 py-2 bg-purple-600 text-white text-lg rounded-lg shadow-md hover:bg-purple-700 transition">
+          결과화면 캡처
         </button>
       </div>
 

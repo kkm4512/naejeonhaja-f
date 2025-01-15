@@ -146,6 +146,9 @@
         >
           결과 복사하기
         </button>
+        <button @click="captureScreen(450, 240, 1000, 480)" class="px-6 py-2 bg-purple-600 text-white text-lg rounded-lg shadow-md hover:bg-purple-700 transition">
+          결과화면 캡처
+        </button>
       </div>
 
       <!-- 이전으로, 팀 다시 구성하기, 저장 버튼 -->
