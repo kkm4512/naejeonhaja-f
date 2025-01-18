@@ -144,7 +144,7 @@
         <button @click="declareWinner('Draw')" class="px-6 py-2 bg-gray-600 text-white text-lg rounded-lg shadow-md hover:bg-gray-700 transition">
           무승부
         </button>
-        <button @click="captureScreen(400, 240, 1100, 845)" class="px-6 py-2 bg-purple-600 text-white text-lg rounded-lg shadow-md hover:bg-purple-700 transition">
+        <button @click="captureScreen(200, 240, 1100, 845)" class="px-6 py-2 bg-purple-600 text-white text-lg rounded-lg shadow-md hover:bg-purple-700 transition">
           결과화면 캡처
         </button>
       </div>
