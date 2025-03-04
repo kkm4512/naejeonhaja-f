@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       cookieDomain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN,
-      baseApi: process.env.NUXT_PUBLIC_API_URL || 'https://server.naejeonhaja.com/api/v1',
+      baseApi: process.env.NUXT_PUBLIC_API_URL || 'http://server.naejeonhaja.com:9000/api/v1',
     }
   },
 })
