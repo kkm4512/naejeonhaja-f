@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { ApiResponse, Page } from '~/types/common';
-import type { LolPlayerHistorySimpleDto } from '~/types/game/lol/res/resLolDto';
+import type { LolPlayerHistoryResponseSimpleDto } from '~/types/game/lol/res/resLolDto';
 import LolPlayerHistorySearch from './LolPlayerHistorySearch.vue';
 import type { LolPlayerHistoryUpdateRequestDto } from '~/types/game/lol/req/reqLolDto';
 import SvgIcon from '@jamescoyle/vue-icon';
@@ -16,7 +16,7 @@ const showModal = ref(false);
 const selectedTitle = ref('');
 const selectedId = ref(0);
 
-const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistorySimpleDto>>({
+const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistoryResponseSimpleDto>>({
   content: [],
   page: {
     totalPages: 0,
@@ -30,13 +30,13 @@ const lolPlayerHistorySearchResults = ref<Page<LolPlayerHistorySimpleDto>>({
 const isHistoryVisible = ref(false);
 const rawDomain = cleanDomain(props.domain);
 
-const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistorySimpleDto[]>([]);
+const lolPlayerHistoryResponseSimpleDtos = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const searchQuery = ref(''); // 검색어 상태
 
 // 선택된 항목 관리
-const selectedItems = ref<LolPlayerHistorySimpleDto[]>([]);
+const selectedItems = ref<LolPlayerHistoryResponseSimpleDto[]>([]);
 
 const emit = defineEmits<{
   "update:currentPage": [number];
@@ -55,7 +55,7 @@ const displayedHistory = computed(() => {
 });
 
 // 메서드
-const openEditModal = (item: LolPlayerHistorySimpleDto) => {
+const openEditModal = (item: LolPlayerHistoryResponseSimpleDto) => {
   selectedTitle.value = item.playerHistoryTitle;
   selectedId.value = item.playerHistoryId;
   showModal.value = true;
@@ -65,7 +65,7 @@ const handleCurrentPageUpdate = (page: number) => {
   currentPage.value = page;
 };
 
-const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistorySimpleDto>) => {
+const handleLolPlayerHistorySearchResults = (results: Page<LolPlayerHistoryResponseSimpleDto>) => {
   totalPages.value = results.page.totalPages;
   lolPlayerHistorySearchResults.value = results;
 };
@@ -82,7 +82,7 @@ const togglePlayerHistory = async () => {
 };
 
 const getPlayerHistory = async (page: number) => {
-  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistorySimpleDto>>>(
+  const response = await uFetch<null, ApiResponse<Page<LolPlayerHistoryResponseSimpleDto>>>(
     null,
     `/game/lol/${rawDomain}/playerHistory/simple/${page}`,
     'GET',
@@ -147,7 +147,7 @@ const handleSave = async (newTitle: string, id: number) => {
 };
 
 // 항목 선택 및 전체 선택
-const toggleItemSelection = (item: LolPlayerHistorySimpleDto) => {
+const toggleItemSelection = (item: LolPlayerHistoryResponseSimpleDto) => {
   const index = selectedItems.value.findIndex(selected => selected.playerHistoryId === item.playerHistoryId);
   if (index === -1) {
     selectedItems.value.push(item);
@@ -166,7 +166,7 @@ const toggleSelectAll = (event: Event) => {
 };
 
 // 특정 항목이 선택되었는지 확인
-const isItemSelected = (item: LolPlayerHistorySimpleDto): boolean => {
+const isItemSelected = (item: LolPlayerHistoryResponseSimpleDto): boolean => {
   return selectedItems.value.some(
     (selected) => selected.playerHistoryId === item.playerHistoryId
   );
@@ -177,7 +177,7 @@ const deleteSelectedItems = async () => {
   if (selectedItems.value.length === 0) return;
 
   if (confirm(`선택된 항목을 삭제하시겠습니까?`)) {
-    const response = await uFetch<LolPlayerHistorySimpleDto[], ApiResponse<void>>(selectedItems.value,`/game/lol/${rawDomain}/playerHistory`,"DELETE",true);
+    const response = await uFetch<LolPlayerHistoryResponseSimpleDto[], ApiResponse<void>>(selectedItems.value,`/game/lol/${rawDomain}/playerHistory`,"DELETE",true);
 
     if (response.code === 200) {
       // 삭제 성공 시 selectedItems에 있는 항목들을 displayedHistory에서 제거

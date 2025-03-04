@@ -25,7 +25,7 @@ export type LolPlayerResultHistoryResponseSimpleDto = {
 };
 
 // lol - 플레이어 히스토리 심플목록 가져올때
-export type LolPlayerHistorySimpleDto = {
+export type LolPlayerHistoryResponseSimpleDto = {
   playerHistoryTitle: string; 
   playerHistoryId: number; 
 };
