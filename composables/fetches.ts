@@ -9,6 +9,7 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
     const loadingStore = useLoadingStore(); // 로딩 스토어 사용
     let response;
   
+    
     try {
       loadingStore.startLoading();
       // 요청 옵션 설정
