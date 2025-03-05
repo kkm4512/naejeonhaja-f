@@ -1,7 +1,7 @@
 import type { ApiResponse } from "~/types/common";
 
 export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: string,requiresAuth: boolean = false): Promise<R> => {
-  const { $redirectToLogin } = useNuxtApp();
+    const { $redirectToLogin } = useNuxtApp();
     const { public: { baseApi } } = useRuntimeConfig();
     const jwt = requiresAuth ? useCookie("Authorization") : null;
     const url = baseApi + endPoint;
@@ -34,6 +34,8 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       // Fetch 요청
       response = await fetch(url, fetchOptions);
       const result = await response.json();
+
+
   
       // Handle non-OK status (failure case)
       if (!response.ok) {
