@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref } from "vue";
+import Cookies from "js-cookie";
 import type { ApiResponse } from "~/types/common";
 import type { SigninDto } from "~/types/user/req/SigninDto";
 const router = useRouter();
@@ -11,10 +12,11 @@ const signinDto = ref<SigninDto>({
 
 
 const handleLogin = async () => {
-  const response = await uFetch<SigninDto,ApiResponse<void>>(signinDto.value,"/users/signin","POST")
-    if (response.code == 200) {
-        router.push("/")
-      }
+  const response = await uFetch<SigninDto,ApiResponse<string>>(signinDto.value,"/users/signin","POST")
+  if (response.code == 200) {
+      Cookies.set("Authorization", response.data, { expires: 7 });
+      router.push("/")
+    }
 };
 </script>
 
