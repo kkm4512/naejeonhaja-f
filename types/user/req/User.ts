@@ -7,3 +7,8 @@ export interface User {
     password: string; 
     userRole: UserRole; 
 }
+
+export interface UserDto {
+    id: number; 
+    nickname: string; 
+}
