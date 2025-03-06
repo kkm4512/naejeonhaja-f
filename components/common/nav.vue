@@ -190,7 +190,7 @@ const resultToggleDropdown = () => {
           <span class="mx-2 w-px h-6 bg-gray-600 hidden md:inline-block"></span>
           <li>
             <a
-              href="https://open.kakao.com/o/gKcd196g"
+              href="/inquiry?page=1"
               class="flex items-center py-2 px-3 text-white rounded hover:bg-gray-800 md:hover:bg-transparent md:border-0 md:hover:text-blue-500 md:p-0 dark:text-white dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent"
             >
               문의
