@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       cookieDomain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN,
-      baseApi: process.env.NUXT_PUBLIC_API_URL || 'https://d43b-1-229-119-49.ngrok-free.app/api/v1',
+      baseApi: process.env.NUXT_PUBLIC_API_URL || 'https://40a6-1-229-119-49.ngrok-free.app/api/v1',
     }
   },
 })
