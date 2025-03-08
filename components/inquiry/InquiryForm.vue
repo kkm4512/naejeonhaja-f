@@ -20,23 +20,19 @@ const submitInquiry = async () => {
         tags: selectedTags.value,
     }
 
-    const response = await uFetch<InquiryRequestDto, ApiResponse<InquiryResponseDto>>(
+    await uFetch<InquiryRequestDto, ApiResponse<InquiryResponseDto>>(
       data,
       "/inquiry",
       "POST",
       true // 인증이 필요한 경우 true, 필요 없으면 false
     );
 
-    if (response.code === 200) {
-      emit("submit", {
-      });
-
-      // 입력 필드 초기화 후 모달 닫기
-      title.value = "";
-      content.value = "";
-      selectedTags.value = [];
-      emit("close");
-    }
+    emit("submit", {});
+    // 입력 필드 초기화 후 모달 닫기
+    title.value = "";
+    content.value = "";
+    selectedTags.value = [];
+    emit("close");
 };
 
 </script>

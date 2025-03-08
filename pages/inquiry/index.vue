@@ -70,7 +70,11 @@ onMounted(() => fetchInquiries(currentPage.value));
         :key="inquiry.id"
         class="bg-white shadow-lg rounded-lg p-4 border border-gray-200 hover:shadow-xl transition"
       >
-        <h2 class="text-lg font-semibold text-gray-800">{{ inquiry.title }}</h2>
+        <!-- 제목을 클릭하면 해당 문의글 상세 페이지로 이동 -->
+        <router-link :to="`/inquiry/${inquiry.id}`" class="block text-lg font-semibold text-gray-800 hover:text-blue-500 transition">
+          {{ inquiry.title }}
+        </router-link>
+
         <p class="text-gray-600 mt-1 text-sm line-clamp-2">{{ inquiry.content }}</p>
 
         <!-- 태그 리스트 -->
@@ -123,3 +127,4 @@ onMounted(() => fetchInquiries(currentPage.value));
     </div>
   </div>
 </template>
+

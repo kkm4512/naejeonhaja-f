@@ -15,6 +15,7 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       // 요청 옵션 설정
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true"
       };
       if (requiresAuth && jwt?.value) {
         headers["Authorization"] = jwt.value;
@@ -34,19 +35,14 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       // Fetch 요청
       response = await fetch(url, fetchOptions);
       const result = await response.json();
-
-
   
       // Handle non-OK status (failure case)
       if (!response.ok) {
         const errorResponse: ApiResponse<void> = result;
         alert(errorResponse.message);
-        if (errorResponse.code === 403) {
-          $redirectToLogin()
-        }
         if (errorResponse.code === 401) {
-          logout();
           $redirectToLogin();
+          logout()
         }
         throw errorResponse; // Re-throw as BaseExceptionResponse
       }

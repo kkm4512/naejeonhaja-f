@@ -22,7 +22,7 @@ const lolToggleDropdown = () => {
 // 사용자 상태
 const jwt = ref<string | null>("");
 const nickname = ref<string | null>(null)
-const cookie = useCookie("Authorization");
+const cookie = getAuthorizationCookie();
 
 onMounted(async () => {
   if (cookie.value) {
