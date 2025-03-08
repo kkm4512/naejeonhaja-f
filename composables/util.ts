@@ -1,5 +1,7 @@
 import html2canvas from "html2canvas";
+import { jwtDecode } from "jwt-decode";
 import { TagType } from "~/types/inquiry/inquiryDtos";
+import type { User } from "~/types/user/req/User";
 
 export const cleanDomain = (domain: string) => domain.replace(/^['"]|['"]$/g, '');
 
@@ -67,19 +69,33 @@ export const formatRelativeDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
 
-  const diffTime = now.getTime() - date.getTime(); // 밀리초 차이
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // 일 단위 변환
+  // 시간 정보를 제거하고 날짜 차이만 계산
+  const diffTime = Math.floor((now.setHours(0, 0, 0, 0) - date.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) {
-    return "오늘"
-  } else if (diffDays === 1) {
+  if (diffTime === 0) {
+    return "오늘";
+  } else if (diffTime === 1) {
     return "1일 전";
-  } else if (diffDays < 30) {
-    return `${diffDays}일 전`;
-  } else if (diffDays < 365) {
-    return `${Math.floor(diffDays / 30)}개월 전`;
+  } else if (diffTime < 30) {
+    return `${diffTime}일 전`;
+  } else if (diffTime < 365) {
+    return `${Math.floor(diffTime / 30)}개월 전`;
   } else {
-    return `${Math.floor(diffDays / 365)}년 전`;
+    return `${Math.floor(diffTime / 365)}년 전`;
+  }
+};
+
+export const getJwtFormatUser = (cookie: string | null | undefined): User | null => {
+  if (!cookie) {
+    return null; // 쿠키가 없으면 null 반환
+  }
+
+  try {
+    const user: User = jwtDecode(cookie);
+    return user;
+  } catch (error) {
+    console.error("Invalid JWT Token", error);
+    return null; // 잘못된 토큰일 경우 null 반환
   }
 };
 
