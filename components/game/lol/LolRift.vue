@@ -93,19 +93,20 @@ const fetchPlayerData = async (playerName: string) => {
   };
 
 
-const debouncedFetchPlayerData = debounce(fetchPlayerData, 1000);
+// const debouncedFetchPlayerData = debounce(fetchPlayerData, 1000);
 
 // 진지 모드일때만 실행되게 하기
-lolPlayerDto.value.forEach((player) => {
-  watchEffect(() => {
-    if (player.name.trim() !== "") {
-      debouncedFetchPlayerData(player.name);
-    } else if (player.name === "") {
-      player.errorMessage = "";
-      player.successMessage = "";
-    }
-  }, { flush: 'post' });
-});
+// lolPlayerDto.value.forEach((player) => {
+//   watchEffect(() => {
+//     if (player.name.trim() !== "") {
+//       debouncedFetchPlayerData(player.name);
+//       console.log(player.name)
+//     } else if (player.name === "") {
+//       player.errorMessage = "";
+//       player.successMessage = "";
+//     }
+//   }, { flush: 'post' });
+// });
 
 
 
@@ -133,6 +134,15 @@ const updatelines = (player: LolPlayerDto, line: Line, type: LineRole): void => 
 // 서버로 데이터 전달 함수
 const sendToServer = async () => {
   if (selectedButton.value === PlayerMode.SERIOUS) {
+    for (const p of lolPlayerDto.value) {
+      await fetchPlayerData(p.name); 
+      if (p.errorMessage !== "") {
+        alert("유효하지 않은 플레이어가 존재합니다");
+        return;
+      }
+    }
+
+
     let isOk = true;
     // 플레이어 전부 인증된 플레이언지 확인
     lolPlayerDto.value.forEach(p => {
@@ -247,7 +257,6 @@ function handleHelp(): void {
             >
             진지한 내전 목적 (플레이어들의 실제 정보를 라이엇으로부터 가져옴)<br />
             ※ 플레이어의 닉네임 + 태그를 정확히 입력해야함 <br />
-            ※ 태그는 생략하면 #kr1로 자동 인식합니다
             </div>
           </div>
         </div>

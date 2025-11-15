@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import LolAbyss from '~/components/game/lol/LolAbyss.vue';
+import LolAbyss from '@/components/game/lol/LolAbyss.vue';
 
 // 현재 라우터 정보 가져오기
 const route = useRoute();

@@ -50,7 +50,7 @@
             <div
               v-for="(player, index) in lolTeamResponseDto.teamA"
               :key="index"
-              class="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md space-x-4"
+              :class="`flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md space-x-4 ${getTierGroupClass(player.tier)}`" 
             >
               <!-- 플레이어 정보 -->
               <div class="flex items-center space-x-4 min-w-[180px]">
@@ -65,6 +65,14 @@
               <div class="text-sm font-semibold" :class="player.mmrReduced ? 'text-gray-500' : 'text-blue-700'">
                 {{ player.mmrReduced ? 'Sub' : 'Main' }}
               </div>
+
+              <!-- <ul class="space-y-3">
+                <li
+                  :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+                ></li>
+                {{ player.tier }}
+              </ul> -->
+              
 
               <!-- 챔피언 정보 -->
               <div class="flex space-x-3">
@@ -116,14 +124,41 @@
                 {{ player.mmrReduced ? 'Sub' : 'Main' }}
               </div>
 
+              <!-- <ul class="space-y-3">
+                <li
+                  :class="`flex items-center gap-4 p-3 rounded-lg border-4 transition ${getTierGroupClass(player.tier)} hover:scale-105`"
+                ></li>
+                {{ player.tier }}
+              </ul>               -->
+
               <!-- 챔피언 정보 -->
+
+
               <div class="flex space-x-3">
-                <div v-for="(riotChampionMasteryDto, _index) in riotPlayerDtos[index + 5]?.riotChampionMasteryDtos" :key="_index" class="flex flex-col items-center space-y-1">
-                  <img :src="`${lolChampionImageUrl}${riotPlayerDtos[index + 5]?.championDtos[_index]?.image?.full}`" class="w-10 h-10 rounded-lg border border-red-400">
-                  <p class="text-xs font-semibold text-red-900">Lv: {{ riotChampionMasteryDto.championLevel }}</p>
-                  <p class="text-xs text-red-700">Pts: {{ riotChampionMasteryDto.championPoints }}</p>
+
+                <!-- 플레이어 index는 밖에서 전달된 index 사용 -->
+                <div
+                  v-for="(championDto, champIndex) in riotPlayerDtos[index + 5]?.riotChampionMasteryDtos"
+                  :key="champIndex"
+                  class="flex flex-col items-center space-y-1"
+                >
+
+                  <img 
+                    v-if="championImgUrl[index + 5] && championImgUrl[index + 5][champIndex]"
+                    :src="championImgUrl[index + 5][champIndex]"
+                    alt="Champion Image"
+                    class="w-16 h-16"
+                  />
+
+                  <p class="text-xs font-semibold text-red-900">
+                    Lv: {{ championDto.championLevel }}
+                  </p>
+                  <p class="text-xs text-red-700">
+                    Pts: {{ championDto.championPoints }}
+                  </p>
                 </div>
               </div>
+
             </div>
           </div>
           <!-- Team B 승리 버튼 -->
@@ -179,11 +214,46 @@
   import type { LolTeamResponseDto } from '~/types/game/lol/res/resLolDto';
   import type { RiotPlayerDto } from '~/types/game/riot/common';
 
-  onMounted(async() => {
-    lolStore.loadRiftTeams();
-    lolStore.loadInitRiftTeamsWithTitle();
-    await getRiotPlayerDtos();
+
+onMounted(async () => {
+  lolStore.loadRiftTeams();
+  lolStore.loadInitRiftTeamsWithTitle();
+  await getRiotPlayerDtos();
+
+  // 플레이어별로 챔피언 이미지 배열 준비
+  championImg.value = Array.from(
+    { length: riotPlayerDtos.value.length },
+    () => []
+  );
+  championImgUrl.value = Array.from(
+    { length: riotPlayerDtos.value.length },
+    () => []
+  );
+
+  // 2중 반복문
+  for (let i = 0; i < riotPlayerDtos.value.length; i++) {
+    const riotPlayer = riotPlayerDtos.value[i];
+    console.log("riotPlayer:");
+    console.log(riotPlayer);
+    for (let j = 0; j < riotPlayer.championDtos.length; j++) {
+      const champ = riotPlayer.championDtos[j];
+
+      const blob = await getChampionImageByChampionName(champ.id);
+
+      // Blob 저장
+      championImg.value[i][j] = blob;
+
+      // URL 저장
+      championImgUrl.value[i][j] = URL.createObjectURL(blob);
+    }
+  }
 });
+
+
+const championImg = ref<Blob[][]>([]);
+const championImgUrl = ref<string[][]>([]);
+
+
 
   // 데이터
   const lolStore = useLolStore();
@@ -193,6 +263,31 @@
   const riotPlayerDtos = ref<RiotPlayerDto[]>([]);
   const lolChampionImageUrl = "https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/";
   const lolSummonerIconUrl = "https://ddragon.leagueoflegends.com/cdn/15.1.1/img/profileicon/"
+
+
+
+const getChampionImageByChampionName = async (championName: string): Promise<Blob> => {
+  const response = await uFetch<null, ApiResponse<string>>(
+    null,
+    `/game/lol/dataDragon/championName/${encodeURIComponent(championName)}`,
+    "GET",
+    true
+  );
+
+  const base64 = response.data;
+
+  // Base64 → Blob 변환
+  const byteString = atob(base64);
+  const array = new Uint8Array(byteString.length);
+
+  for (let i = 0; i < byteString.length; i++) {
+    array[i] = byteString.charCodeAt(i);
+  }
+
+  return new Blob([array], { type: "image/png" });
+};
+
+
 
   const getRiotPlayerDtos = async () => {
     riotPlayerDtos.value = []; // 초기화    
@@ -215,6 +310,7 @@
         console.error('API 호출 중 오류 발생:', error);
     }
 };
+
 
   const lolTeamResponseDto: Ref<LolTeamResponseDto> = computed(() =>({
     teamA: lolStore.riftTeamA,
@@ -240,6 +336,7 @@
   })
 )
   const declareWinner = (team: string) => {
+    
     winner.value = team; // 승리한 팀 설정
     
     if (team === 'TeamA') {

@@ -15,7 +15,6 @@ export const uFetch = async <T, R>(data: T | null,endPoint: string,methods: stri
       // 요청 옵션 설정
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        'ngrok-skip-browser-warning': '69420',
       };
       if (requiresAuth && jwt?.value) {
         headers["Authorization"] = jwt.value;

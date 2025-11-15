@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-import Footer from '~/components/common/footer.vue';
+import Footer from '@/components/common/footer.vue';
 
 const comments = [
   "어서오세요!",
