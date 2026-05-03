@@ -9,6 +9,7 @@ export interface LolPlayerRequest {
   lines: LolPlayerLine[]
   mmr: number
   mmrReduced: boolean
+  profileIconUrl?: string
 }
 
 export interface TeamBalanceRequest {
@@ -21,6 +22,7 @@ export interface TeamPlayer {
   lines: LolPlayerLine[]
   mmr: number
   mmrReduced: boolean
+  profileIconUrl?: string
 }
 
 export interface TeamBalanceData {

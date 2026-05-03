@@ -21,7 +21,7 @@
         <div class="player-list">
           <article v-for="player in result.teamA" :key="player.name" class="player-card">
             <div class="player-avatar" :style="getAvatarStyle(player)">
-              {{ getInitials(player.name) }}
+              <span v-if="!player.profileIconUrl && !props.iconMap?.[player.name]">{{ getInitials(player.name) }}</span>
             </div>
             <div class="player-meta">
               <div class="player-name">{{ player.name }}</div>
@@ -41,7 +41,7 @@
         <div class="player-list">
           <article v-for="player in result.teamB" :key="player.name" class="player-card">
             <div class="player-avatar" :style="getAvatarStyle(player)">
-              {{ getInitials(player.name) }}
+              <span v-if="!player.profileIconUrl && !props.iconMap?.[player.name]">{{ getInitials(player.name) }}</span>
             </div>
             <div class="player-meta">
               <div class="player-name">{{ player.name }}</div>
@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import type { TeamBalanceData } from '~/types/api'
 
-const props = defineProps<{ result: TeamBalanceData }>()
+const props = defineProps<{ result: TeamBalanceData; iconMap?: Record<string, string> }>()
 
 const formatLines = (lines: { line: string; lineRole: string }[]) => {
   return lines.map((item) => `${item.line} (${item.lineRole})`).join(' · ')
@@ -88,7 +88,16 @@ const tierClass = (tier: string) => {
   return `tier-${key}`
 }
 
-const getAvatarStyle = (player: { name: string; tier: string }) => {
+const getAvatarStyle = (player: { name: string; tier: string; profileIconUrl?: string }) => {
+  const iconUrl = player.profileIconUrl || props.iconMap?.[player.name]
+  if (iconUrl) {
+    return {
+      backgroundImage: `url(${iconUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center'
+    }
+  }
+
   const base = player.tier.split('_')[0]?.toLowerCase() || 'default'
   const colors: Record<string, string> = {
     iron: '#9ca3af',

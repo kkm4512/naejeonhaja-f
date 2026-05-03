@@ -4,7 +4,7 @@
       <div>
         <p class="eyebrow">팀 생성</p>
         <h1>롤 내전 팀 빌더</h1>
-        <p class="subtitle">닉네임으로 소환사 정보를 불러오고, 팀 생성 JSON을 직접 입력해서 즉시 팀을 구성하세요.</p>
+        <p class="subtitle">줄단위 소환사 목록으로 최대 10명을 로드하고 바로 팀을 생성하세요.</p>
       </div>
       <div class="mode-tabs">
         <button :class="{ active: mode === 'builder' }" @click="setMode('builder')">플레이어 빌드</button>
@@ -16,65 +16,53 @@
       <div v-if="mode === 'builder'" class="builder-panel">
         <div class="builder-grid">
           <div class="card card-panel">
-            <h2>소환사 검색</h2>
+            <h2>한꺼번에 로드</h2>
+            <p class="hint">줄당 1명씩 최대 10명까지 입력하면 한 번에 플레이어 정보를 불러옵니다.</p>
             <div class="field-group">
-              <label>롤 닉네임</label>
-              <input v-model="summonerName" placeholder="PlayerName#KR" />
+              <label>한번에 추가할 소환사</label>
+              <textarea v-model="bulkSummonerText" rows="5" placeholder="Player1#KR\nPlayer2#KR"></textarea>
             </div>
-            <button class="primary-button" @click="fetchPlayerInfo" :disabled="loading">소환사 정보 조회</button>
-            <div v-if="playerInfo" class="profile-panel">
-              <div class="profile-main">
-                <div class="profile-avatar" :style="profileIconUrl ? { backgroundImage: `url(${profileIconUrl})`, backgroundSize: 'cover' } : undefined">
-                  <span v-if="!profileIconUrl">{{ getInitials(playerInfo) }}</span>
-                </div>
-                <div class="profile-details">
-                  <p class="profile-name">{{ displayName(playerInfo) }}</p>
-                  <p class="profile-tier">{{ displayTier(playerInfo) }}</p>
-                  <p class="profile-level">레벨 {{ displayLevel(playerInfo) }}</p>
-                  <p class="profile-league">{{ getLeagueText(playerInfo) }}</p>
-                </div>
-              </div>
-              <div v-if="getTopChampions(playerInfo).length" class="champion-list">
-                <div v-for="champion in getTopChampions(playerInfo)" :key="champion.name" class="champion-chip">
-                  <strong>{{ champion.name }}</strong>
-                  <small>{{ champion.points }} mastery</small>
-                </div>
-              </div>
+            <div class="button-row">
+              <button class="primary-button" type="button" @click="loadBulkPlayers" :disabled="loading || !bulkSummonerText.trim()">한꺼번에 로드</button>
+              <span class="small-text">줄당 1명, 최대 10명</span>
             </div>
           </div>
 
-          <div class="card card-panel">
-            <h2>플레이어 구성</h2>
-            <div class="field-group">
-              <label>티어</label>
-              <input v-model="newPlayer.tier" readonly placeholder="소환사 검색으로 자동 입력" />
+          <div v-if="stagedPlayers.length" class="card card-panel wide-card">
+            <h2>임시 플레이어 라인 설정</h2>
+            <p class="hint">로드된 소환사의 라인을 확인하고 수정한 뒤 팀에 추가하세요.</p>
+            <div class="staged-list">
+              <article v-for="(player, index) in stagedPlayers" :key="`${player.name}-${index}`" class="current-item">
+                <div>
+                  <strong>{{ player.name }}</strong>
+                  <p class="small-text">{{ player.tier }}</p>
+                  <div class="line-row" v-for="(lineItem, lineIndex) in player.lines" :key="lineIndex">
+                    <select v-model="lineItem.line">
+                      <option v-for="line in lines" :key="line" :value="line">{{ line }}</option>
+                    </select>
+                    <select v-model="lineItem.lineRole">
+                      <option value="MAINLINE">MAINLINE</option>
+                      <option value="SUBLINE">SUBLINE</option>
+                    </select>
+                    <button v-if="player.lines.length > 1" type="button" class="text-button" @click="removeStagedLine(index, lineIndex)">삭제</button>
+                  </div>
+                  <div class="field-group button-row">
+                    <button type="button" class="secondary-button" @click="addStagedLine(index)" :disabled="player.lines.length >= 10">라인 추가</button>
+                    <button type="button" class="secondary-button" @click="setStagedAnyLines(index)">상관없음</button>
+                  </div>
+                </div>
+                <button class="text-button" @click="removeStagedPlayer(index)">제외</button>
+              </article>
             </div>
-            <div class="line-row" v-for="(lineItem, lineIndex) in newPlayer.lines" :key="lineIndex">
-              <div class="field-group">
-                <label>라인 {{ lineIndex + 1 }}</label>
-                <select v-model="lineItem.line">
-                  <option v-for="line in lines" :key="line" :value="line">{{ line }}</option>
-                </select>
+            <div class="action-footer">
+              <div class="button-group">
+                <button class="primary-button" type="button" @click="commitStagedPlayers" :disabled="loading || !stagedPlayers.length || playerList.length + stagedPlayers.length > 10">플레이어 추가</button>
               </div>
-              <div class="field-group">
-                <label>라인 역할</label>
-                <select v-model="lineItem.lineRole">
-                  <option value="MAINLINE">MAINLINE</option>
-                  <option value="SUBLINE">SUBLINE</option>
-                </select>
+              <div class="status-text">
+                <span v-if="playerList.length + stagedPlayers.length > 10" class="error-text">최대 10명 제한을 초과합니다.</span>
               </div>
-              <button v-if="newPlayer.lines.length > 1" type="button" class="text-button" @click="removeLine(lineIndex)">삭제</button>
             </div>
-            <div class="field-group">
-              <button type="button" class="secondary-button" @click="addLine" :disabled="newPlayer.lines.length >= 2">라인 추가</button>
-            </div>
-            <div class="field-group checkbox-group">
-              <input id="mmrReduced" type="checkbox" v-model="newPlayer.mmrReduced" />
-              <label for="mmrReduced">서브라인 페널티 적용</label>
-            </div>
-            <button class="secondary-button" @click="addPlayer" type="button">플레이어 추가</button>
           </div>
-
           <div class="card card-panel wide-card">
             <h2>현재 플레이어 목록</h2>
             <p class="hint">최대 10명까지 추가 후 팀 생성을 진행하세요.</p>
@@ -112,26 +100,24 @@
         <button class="ghost-button" @click="resetAll">초기화</button>
       </div>
       <div class="status-text">
-        <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
+        <span v-if="loading" class="loading-text">서버 응답 대기 중... 로딩중입니다.</span>
+        <span v-else-if="errorMessage" class="error-text">{{ errorMessage }}</span>
         <span v-else-if="teamResult" class="success-text">팀 생성이 완료되었습니다.</span>
       </div>
     </div>
 
-    <TeamResultDisplay v-if="teamResult" :result="teamResult" />
+    <TeamResultDisplay v-if="teamResult" :result="teamResult" :iconMap="playerIconMap" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { computed, ref } from 'vue'
 import TeamResultDisplay from '~/components/TeamResultDisplay.vue'
 import { useApiClient } from '~/composables/useApiClient'
 import type { LolPlayerRequest, TeamBalanceData, TeamBalanceRequest, RiotPlayerBasicInfo } from '~/types/api'
 
 const apiClient = useApiClient()
 const mode = ref<'builder' | 'json'>('builder')
-const summonerName = ref('')
-const playerInfo = ref<RiotPlayerBasicInfo | null>(null)
-const profileIconUrl = ref<string | null>(null)
 const loading = ref(false)
 const errorMessage = ref('')
 const jsonStatus = ref('')
@@ -153,16 +139,110 @@ const jsonText = ref(`{
 }`)
 const teamResult = ref<TeamBalanceData | null>(null)
 const playerList = ref<LolPlayerRequest[]>([])
+const stagedPlayers = ref<LolPlayerRequest[]>([])
+const bulkSummonerText = ref('')
 
 const lines = ['TOP', 'JUNGLE', 'MID', 'AD', 'SUPPORT']
 
-const newPlayer = reactive<LolPlayerRequest>({
-  name: '',
-  tier: '',
-  lines: [{ line: 'TOP', lineRole: 'MAINLINE' }],
-  mmr: 0,
-  mmrReduced: false
+const playerIconMap = computed(() => {
+  return playerList.value.reduce<Record<string, string>>((map, player) => {
+    if (player.profileIconUrl) {
+      map[player.name] = player.profileIconUrl
+    }
+    return map
+  }, {})
 })
+
+const addStagedLine = (playerIndex: number) => {
+  const player = stagedPlayers.value[playerIndex]
+  if (player && player.lines.length < 10) {
+    player.lines.push({ line: 'TOP', lineRole: 'MAINLINE' })
+  }
+}
+
+const removeStagedLine = (playerIndex: number, lineIndex: number) => {
+  const player = stagedPlayers.value[playerIndex]
+  if (player && player.lines.length > 1) {
+    player.lines.splice(lineIndex, 1)
+  }
+}
+
+const setStagedAnyLines = (playerIndex: number) => {
+  const player = stagedPlayers.value[playerIndex]
+  if (player) {
+    player.lines = lines.map((line) => ({ line, lineRole: 'MAINLINE' }))
+  }
+}
+
+const removeStagedPlayer = (index: number) => {
+  stagedPlayers.value.splice(index, 1)
+}
+
+const loadBulkPlayers = async () => {
+  resetMessages()
+  const names = bulkSummonerText.value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (!names.length) {
+    errorMessage.value = '추가할 소환사를 한 줄에 하나씩 입력해주세요.'
+    return
+  }
+  if (names.length > 10) {
+    errorMessage.value = '한 번에 최대 10명까지 입력할 수 있습니다.'
+    return
+  }
+  if (names.length + playerList.value.length > 10) {
+    errorMessage.value = '최대 10명까지 추가할 수 있습니다.'
+    return
+  }
+
+  loading.value = true
+  try {
+    const players = await Promise.all(
+      names.map(async (name) => {
+        const info = await apiClient.getPlayerBasicInfo(name)
+        return {
+          name: displayName(info, name),
+          tier: displayTier(info),
+          lines: [{ line: 'TOP', lineRole: 'MAINLINE' }],
+          mmr: 0,
+          mmrReduced: false,
+          profileIconUrl: getProfileIconUrl(info) || undefined
+        }
+      })
+    )
+    stagedPlayers.value = players
+    bulkSummonerText.value = ''
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '소환사 정보를 불러오는 데 실패했습니다.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const commitStagedPlayers = () => {
+  resetMessages()
+  if (!stagedPlayers.value.length) {
+    errorMessage.value = '추가할 플레이어가 없습니다.'
+    return
+  }
+  if (playerList.value.length + stagedPlayers.value.length > 10) {
+    errorMessage.value = '최대 10명까지 추가할 수 있습니다.'
+    return
+  }
+
+  playerList.value.push(...stagedPlayers.value.map((player) => ({
+    name: player.name,
+    tier: player.tier,
+    lines: player.lines.map((item) => ({ line: item.line, lineRole: item.lineRole })),
+    mmr: player.mmr,
+    mmrReduced: player.mmrReduced,
+    profileIconUrl: player.profileIconUrl
+  })))
+  stagedPlayers.value = []
+}
 
 const setMode = (selected: 'builder' | 'json') => {
   mode.value = selected
@@ -174,38 +254,32 @@ const resetMessages = () => {
   jsonStatus.value = ''
 }
 
-const displayName = (info: RiotPlayerBasicInfo | null) => {
+const displayName = (info: RiotPlayerBasicInfo | null, fallback = '알 수 없는 소환사') => {
   const account = info?.riotAccountDto as { gameName?: string; tagLine?: string } | undefined
   if (account?.gameName) {
     return `${account.gameName}${account.tagLine ? `#${account.tagLine.trim()}` : ''}`
   }
-  return '알 수 없는 소환사'
+
+  const summoner = info?.riotSummonerDto as { name?: string } | undefined
+  if (summoner?.name) {
+    return summoner.name
+  }
+
+  return fallback
 }
 
 const displayTier = (info: RiotPlayerBasicInfo | null) => {
-  const league = info?.riotLeagueDto as { tier?: string; rank?: string } | undefined
+  const league = (info?.riotLeagueDto || (info as any)?.riotLeague) as { tier?: string; rank?: string } | undefined
   if (league?.tier) {
     return `${league.tier}_${league.rank ?? ''}`.replace(/_$/, '')
   }
-  return 'UNRANKED'
-}
 
-const getInitials = (info: RiotPlayerBasicInfo | null) => {
-  const name = displayName(info)
-  return name
-    .split(/[#\s]/)
-    .map((part) => part[0] ?? '')
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-}
-
-const displayLevel = (info: RiotPlayerBasicInfo | null) => {
-  const summoner = info?.riotSummonerDto as { summonerLevel?: number } | undefined
-  if (summoner?.summonerLevel) {
-    return summoner.summonerLevel
+  const altTier = (info as any)?.tier
+  if (typeof altTier === 'string' && altTier.trim()) {
+    return altTier.trim()
   }
-  return 'Unknown'
+
+  return 'UNRANKED'
 }
 
 const getProfileIconUrl = (info: RiotPlayerBasicInfo | null) => {
@@ -216,102 +290,13 @@ const getProfileIconUrl = (info: RiotPlayerBasicInfo | null) => {
   return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${iconId}.png`
 }
 
-const getLeagueText = (info: RiotPlayerBasicInfo | null) => {
-  const league = info?.riotLeagueDto as { tier?: string; rank?: string; leaguePoints?: number } | undefined
-  if (!league?.tier) {
-    return 'Unranked'
-  }
-  return `${league.tier} ${league.rank ?? ''} ${league.leaguePoints ?? ''}LP`.trim()
-}
-
-const getTopChampions = (info: RiotPlayerBasicInfo | null) => {
-  const masteries = (info?.masteries || []) as Array<{ championId?: number; championPoints?: number }>
-  const champions = (info?.champions || []) as Array<{ key?: string; name?: string }>
-
-  return masteries
-    .filter((item) => typeof item.championPoints === 'number')
-    .sort((a, b) => (b.championPoints ?? 0) - (a.championPoints ?? 0))
-    .slice(0, 3)
-    .map((item) => {
-      const matched = champions.find((champ) => champ.key === String(item.championId))
-      return {
-        name: matched?.name || `챔피언 ${item.championId}`,
-        points: item.championPoints ?? 0
-      }
-    })
-}
-
 const formatLines = (linesValue: { line: string; lineRole: string }[]) => {
   return linesValue.map((item) => `${item.line} (${item.lineRole})`).join(' · ')
 }
 
-const fetchPlayerInfo = async () => {
-  resetMessages()
-  if (!summonerName.value.trim()) {
-    errorMessage.value = '닉네임을 입력해주세요.'
-    return
-  }
-  loading.value = true
-  playerInfo.value = null
-
-  try {
-    const info = await apiClient.getPlayerBasicInfo(summonerName.value.trim())
-    playerInfo.value = info
-    profileIconUrl.value = getProfileIconUrl(info)
-    newPlayer.name = displayName(info)
-    newPlayer.tier = displayTier(info)
-    newPlayer.mmr = 0
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '소환사 정보를 불러오는 데 실패했습니다.'
-  } finally {
-    loading.value = false
-  }
-}
-
-const addPlayer = () => {
-  resetMessages()
-  if (!newPlayer.name.trim() || !newPlayer.tier.trim()) {
-    errorMessage.value = '소환사 정보 또는 티어가 필요합니다.'
-    return
-  }
-  if (playerList.value.length >= 10) {
-    errorMessage.value = '최대 10명까지 추가할 수 있습니다.'
-    return
-  }
-
-  playerList.value.push({
-    name: newPlayer.name,
-    tier: newPlayer.tier,
-    lines: newPlayer.lines.map((item) => ({ line: item.line, lineRole: item.lineRole })),
-    mmr: newPlayer.mmr,
-    mmrReduced: newPlayer.mmrReduced
-  })
-
-  newPlayer.name = ''
-  newPlayer.tier = ''
-  newPlayer.lines = [{ line: 'TOP', lineRole: 'MAINLINE' }]
-  newPlayer.mmrReduced = false
-  summonerName.value = ''
-  playerInfo.value = null
-  profileIconUrl.value = null
-}
 
 const removePlayer = (index: number) => {
   playerList.value.splice(index, 1)
-}
-
-const addLine = () => {
-  if (newPlayer.lines.length >= 2) {
-    return
-  }
-  newPlayer.lines.push({ line: 'TOP', lineRole: 'MAINLINE' })
-}
-
-const removeLine = (index: number) => {
-  if (newPlayer.lines.length <= 1) {
-    return
-  }
-  newPlayer.lines.splice(index, 1)
 }
 
 const fillSamplePlayers = () => {
@@ -380,14 +365,8 @@ const submitTeamRequest = async () => {
 }
 
 const resetAll = () => {
-  summonerName.value = ''
-  playerInfo.value = null
   playerList.value = []
-  newPlayer.name = ''
-  newPlayer.tier = ''
-  newPlayer.lines = [{ line: 'TOP', lineRole: 'MAINLINE' }]
-  newPlayer.mmrReduced = false
-  profileIconUrl.value = null
+  bulkSummonerText.value = ''
   teamResult.value = null
   errorMessage.value = ''
   jsonStatus.value = ''
@@ -467,6 +446,13 @@ const resetAll = () => {
   gap: 0.55rem;
   margin-bottom: 1rem;
 }
+.field-group.button-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
 .field-group label {
   color: #cbd5e1;
   font-size: 0.92rem;
@@ -526,6 +512,18 @@ const resetAll = () => {
   background: transparent;
   color: #60a5fa;
   padding: 0.5rem 0.75rem;
+}
+.staged-list,
+.current-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.button-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 .card-panel.wide-card {
   grid-column: span 3;
@@ -592,8 +590,10 @@ const resetAll = () => {
   gap: 0.85rem;
   align-items: end;
 }
+.staged-list,
 .current-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
   max-height: 320px;
   overflow-y: auto;
@@ -644,6 +644,9 @@ const resetAll = () => {
   display: flex;
   gap: 0.9rem;
   flex-wrap: wrap;
+}
+.loading-text {
+  color: #93c5fd;
 }
 .status-text {
   min-height: 1.5rem;
