@@ -1,20 +1,74 @@
+/* 내전하자 — 드래프트(픽창) 테마
+   진영 색(블루/레드)이 화면의 주인공이고, 나머지는 어두운 남색 바탕 위의 무채색.
+   챔피언 일러스트가 들어가는 자리만 화려하게. */
+:root {
+  --bg: #0b0e1a;
+  --bg-deep: #070912;
+  --panel: #121729;
+  --panel-2: #1a2036;
+  --line: #262d47;
+  --line-strong: #39425f;
+  --text: #eef0f7;
+  --muted: #9097b0;
+  --faint: #5d6482;
+
+  --blue: #3e8bff;
+  --blue-deep: #123a7a;
+  --blue-glow: rgba(62, 139, 255, 0.35);
+  --red: #ff4e5b;
+  --red-deep: #7a1621;
+  --red-glow: rgba(255, 78, 91, 0.35);
+  --win: #5ee3a1;
+  --warn: #ffb35c;
+
+  --font-body: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-display: 'Do Hyeon', 'Pretendard Variable', sans-serif;
+  --font-num: 'Barlow Condensed', 'Pretendard Variable', sans-serif;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.5rem;
+  --fs-xl: 2.25rem;
+  --fs-2xl: 3.75rem;
+
+  --r-s: 6px;
+  --r-m: 12px;
+  --gutter: clamp(16px, 3vw, 36px);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: radial-gradient(circle at top, rgba(14, 165, 233, 0.22), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.18), transparent 20%),
-    #0f172a;
-  color: #e2e8f0;
-  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: transparent;
+  background: var(--bg);
+  font-size: var(--fs-base);
 }
 
-* {
-  box-sizing: border-box;
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
 }
 
 button,
@@ -22,33 +76,155 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
 }
 
-.page-container {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+button {
+  cursor: pointer;
 }
 
-.page-header {
-  color: white;
-  text-align: center;
-  margin-bottom: 2rem;
+button:disabled {
+  cursor: not-allowed;
 }
 
-.page-header h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
+a {
+  color: inherit;
 }
 
-.page-header p {
-  margin: 0.8rem auto 0;
-  max-width: 680px;
-  color: #cbd5e1;
-  line-height: 1.7;
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
-.page-main {
-  display: grid;
-  gap: 1.4rem;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* 버튼 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-s);
+  background: var(--panel);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--panel-2);
+  border-color: var(--muted);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--panel);
+  color: var(--text);
+  border-color: transparent;
+}
+
+.btn--white {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg-deep);
+}
+
+.btn--white:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+}
+
+.btn--blue {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.btn--red {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.btn--blue:hover:not(:disabled),
+.btn--red:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.field {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  background: var(--bg-deep);
+  padding: 8px 12px;
+}
+
+.field:focus {
+  border-color: var(--muted);
+  outline: none;
+}
+
+.field::placeholder {
+  color: var(--faint);
+}
+
+select.field {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+}
+
+/* 페이지 전환 */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
